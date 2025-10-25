@@ -1,24 +1,21 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    //Hilt
+    // hilt
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
 
 android {
-    namespace = "com.app.waterlog"
+    namespace = "com.app.presentation"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.app.waterlog"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -37,6 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    // 추가
     buildFeatures {
         compose = true
     }
@@ -44,8 +42,6 @@ android {
 
 dependencies {
     implementation(project(":domain"))
-    implementation(project(":data"))
-    implementation(project(":presentation"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

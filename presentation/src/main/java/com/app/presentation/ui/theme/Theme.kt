@@ -1,4 +1,4 @@
-package com.app.waterlog.ui.theme
+package com.app.presentation.ui.theme
 
 import android.app.Activity
 import android.os.Build
