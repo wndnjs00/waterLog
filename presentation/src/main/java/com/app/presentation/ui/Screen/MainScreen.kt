@@ -1,4 +1,4 @@
-package com.app.presentation.ui
+package com.app.presentation.ui.Screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,8 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.app.presentation.R
@@ -121,7 +118,7 @@ fun MainNavigationScreen(modifier: Modifier = Modifier){
 @Composable
 fun TopAppBars(){
     TopAppBar(
-        title = {Text(stringResource(id = R.string.app_name))},
+        title = {Text(stringResource(id = R.string.app_name), color = Color.White)},
         colors = TopAppBarDefaults.largeTopAppBarColors(
             actionIconContentColor = Color.White
         ),

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">waterLog</string>
+
+    <string name="app_name_ko">워터로그</string>
 </resources>
