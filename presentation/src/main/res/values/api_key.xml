@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!--google login api key-->
-    <string name="default_web_client_id">697222347127-sfko7o4ncg41nfemar8lmgjim1u6eleu.apps.googleusercontent.com</string>
-</resources>
