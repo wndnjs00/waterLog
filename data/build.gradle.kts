@@ -47,4 +47,15 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+
+    // firebase 연결
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-analytics")
+
+    //firestore firestore
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    //ThreeTenABP 라이브러리 (시간변환 라이브러리)
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
 }

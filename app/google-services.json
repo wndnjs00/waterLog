@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "697222347127",
+    "project_id": "waterlog-f7fc7",
+    "storage_bucket": "waterlog-f7fc7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:697222347127:android:e3b76e1486ff7a72878972",
+        "android_client_info": {
+          "package_name": "com.app.waterlog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhRsJN2FL2dyzq20Brjv_fsY2Xo153AgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

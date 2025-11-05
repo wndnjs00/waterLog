@@ -1,5 +1,8 @@
 package com.app.presentation.ui.Screen
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,29 +22,49 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.app.presentation.R
+import com.app.presentation.ui.Screens
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
+import com.app.presentation.viewModel.MainViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 // 큰틀
 @Composable
-fun MainScreen() {
-    val navController = rememberNavController()
+fun MainScreen(viewModel: MainViewModel = hiltViewModel(), credentialManager: CredentialManager, navController: NavHostController) {
+    val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(accountUserInfo) {
+        accountUserInfo?.let {
+            Toast.makeText(context, "로그인유저 이름: ${it.name}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
-        topBar = { TopAppBars() },
+        topBar = { TopAppBars(viewModel = viewModel, credentialManager = credentialManager, navController = navController) },
 //        bottomBar = {
 //            MainBottomNavigationBar(navController)
 //        }
@@ -50,14 +73,14 @@ fun MainScreen() {
     }
 }
 
-sealed class MainNavigationItem(val route: String, val icon: ImageVector,val name: String){
-    object Main: MainNavigationItem("Main Tab", Icons.Filled.Home, "물마시기")
-    object Ai: MainNavigationItem("Ai Tab", Icons.Filled.Star, "Ai도우미")
+sealed class MainNavigationItem(val route: String, val icon: ImageVector, val name: String) {
+    object Main : MainNavigationItem("Main Tab", Icons.Filled.Home, "물마시기")
+    object Ai : MainNavigationItem("Ai Tab", Icons.Filled.Star, "Ai도우미")
 }
 
 
 @Composable
-fun MainBottomNavigationBar(navController: NavHostController){
+fun MainBottomNavigationBar(navController: NavHostController) {
 
     // 탭 아이템 구성
     val bottomNavigationItems = listOf(
@@ -69,16 +92,16 @@ fun MainBottomNavigationBar(navController: NavHostController){
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        bottomNavigationItems.forEach{ item ->
+        bottomNavigationItems.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(imageVector = item.icon, contentDescription = item.route)},
-                label = {Text(text = item.name)},
+                icon = { Icon(imageVector = item.icon, contentDescription = item.route) },
+                label = { Text(text = item.name) },
                 selected = currentRoute == item.route,
                 onClick = {
                     // 현재선택한 탭의 route로 이동해라
-                    navController.navigate(item.route){
+                    navController.navigate(item.route) {
 
-                        navController.graph.startDestinationRoute?.let {startRoute ->
+                        navController.graph.startDestinationRoute?.let { startRoute ->
                             //백스택 정리
                             popUpTo(startRoute) {
                                 // 이전화면 기억하고 복원
@@ -102,7 +125,7 @@ fun MainBottomNavigationBar(navController: NavHostController){
 
 //각각에 들어갈 화면 구현
 @Composable
-fun MainNavigationScreen(modifier: Modifier = Modifier){
+fun MainNavigationScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -116,9 +139,12 @@ fun MainNavigationScreen(modifier: Modifier = Modifier){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBars(){
+fun TopAppBars(viewModel: MainViewModel, credentialManager: CredentialManager, navController: NavHostController) {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     TopAppBar(
-        title = {Text(stringResource(id = R.string.app_name), color = Color.White)},
+        title = { Text(stringResource(id = R.string.app_name), color = Color.White) },
         colors = TopAppBarDefaults.largeTopAppBarColors(
             actionIconContentColor = Color.White
         ),
@@ -135,15 +161,50 @@ fun TopAppBars(){
                     contentDescription = "알람 아이콘"
                 )
             }
+
+            IconButton(onClick = {
+                coroutineScope.launch {
+                    try {
+                        // 1) Firebase 로그아웃
+                        viewModel.logoutGoogle() // 내부에서 FirebaseAuth.signOut()이 실행된다고 가정
+
+                        // 2) CredentialManager 정리
+                        runCatching {
+                            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                        }.onFailure { throwable ->
+                            throwable.printStackTrace()
+                        }
+
+                        // 로그인 화면으로 이동
+                        navController.navigate(Screens.Login.route) {
+                            popUpTo(Screens.Login.route) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(context, "로그아웃 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.logout),
+                    contentDescription = "로그아웃 아이콘"
+                )
+            }
         }
     )
 }
 
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
+    val fakeViewModel = MainViewModel(
+        accountUseCase = TODO(),
+        timeProvider = TODO(),
+    )
+
     WaterLogTheme {
-        MainScreen()
+        MainScreen(viewModel = fakeViewModel, credentialManager = TODO(), navController = TODO())
     }
 }

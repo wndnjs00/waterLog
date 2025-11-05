@@ -1,5 +1,7 @@
 package com.app.presentation.ui.Screen.Auth
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,22 +22,37 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.app.domain.model.UserInfo
 import com.app.presentation.R
+import com.app.presentation.ui.Screens
 import com.app.presentation.ui.theme.MainBlue
+import com.app.presentation.viewModel.MainViewModel
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @Composable
 fun LoginScreen(
+    viewModel: MainViewModel,
+    credentialManager: CredentialManager,
+    navController: NavController,
     onLoginSuccess: () -> Unit,
     onSignUpClick: () -> Unit,
     onSignInClick: () -> Unit,
@@ -43,6 +60,34 @@ fun LoginScreen(
     onNaverClick: () -> Unit,
     onGoogleClick: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity ?: return
+    val coroutineScope = rememberCoroutineScope()
+    val firebaseAuth by lazy{FirebaseAuth.getInstance()}
+
+    // 로그인되어있는 사용자 확인
+    // 사용자 정보 가져오기(자동로그인 위함)
+    LaunchedEffect(Unit) {
+        if(firebaseAuth.currentUser != null){
+            firebaseAuth.currentUser?.let{
+                viewModel.signInGoogle(
+                    UserInfo.UserInfoCreate(
+                        uid = it.uid,
+                        name = it.displayName ?: "",
+                        email = it.email,
+                        loginProvider = UserInfo.LoginProvider.GOOGLE,
+                        timeProvider = viewModel.getTimeProvider()
+                    )
+                )
+
+                // 바로 MainScreen으로 이동
+                navController.navigate(Screens.Main.route) {
+                    popUpTo(Screens.Login.route) { inclusive = true }
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -82,8 +127,22 @@ fun LoginScreen(
         NaverLoginButton(onClick = onNaverClick)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 구글 로그인 버튼
-        GoogleLoginButton(onClick = onGoogleClick)
+        // 구글 로그인 버튼클릭 동작구현
+        GoogleLoginButton(
+            onClick = {
+                activity.let { activity ->
+                    coroutineScope.launch {
+                        GoogleOnClick(
+                            viewModel = viewModel,
+                            credentialManager = credentialManager,
+                            activity = activity,
+                            onLoginSuccess = {
+                                onLoginSuccess()
+                            }
+                        )
+                    }
+                }
+            })
         Spacer(modifier = Modifier.height(8.dp))
 
         // 이메일 회원가입 버튼
@@ -181,7 +240,7 @@ fun EmailSignUpButton(onClick: () -> Unit) {
             .background(Color(0xFFB4B4B4))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Text(
             text = "이메일로 회원가입",
             color = Color.White,
@@ -194,9 +253,18 @@ fun EmailSignUpButton(onClick: () -> Unit) {
 }
 
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Composable
 @Preview
 fun LoginScreenPreView() {
+    val context = LocalContext.current
+    val fakeCredentialManager = CredentialManager.create(context)
+
+    val fakeViewModel = MainViewModel(
+        accountUseCase = TODO(),
+        timeProvider = TODO(),
+    )
+
     LoginScreen(
         onLoginSuccess = {},
         onSignUpClick = {},
@@ -204,5 +272,8 @@ fun LoginScreenPreView() {
         onKaKaoClick = {},
         onNaverClick = {},
         onGoogleClick = {},
+        viewModel = fakeViewModel,
+        credentialManager = fakeCredentialManager,
+        navController = NavController(context)
     )
 }

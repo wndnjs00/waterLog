@@ -5,6 +5,8 @@ plugins {
     //Hilt
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    //firebase google plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -65,4 +67,24 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+
+    // firebase 연결
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-analytics")
+
+    // firebase auth (추가 안해도되는듯 - bom이 있어서)
+//    implementation("com.google.firebase:firebase-auth:24.0.1")
+//    implementation("com.google.android.gms:play-services-auth:21.4.0")
+
+    // google 로그인
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // firestore firestore
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    //ThreeTenABP 라이브러리 (시간변환 라이브러리)
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
 }
