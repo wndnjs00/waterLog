@@ -8,8 +8,8 @@ data class UserInfo(
     val name: String,
     val email: String?,
     val loginProvider: LoginProvider,
-    val createdAt: String,
-    val lastDrinkDate: String,
+    val createdAt: String, //회원가입 날짜
+    val lastDrinkDate: String?, //마지막으로 물마신 날짜
     val streakDays: Int?,
     val dailyGoal: Int?,
     val totalDays: Int?,
@@ -33,7 +33,7 @@ data class UserInfo(
                 email = email,
                 loginProvider = loginProvider,
                 createdAt = timeProvider.nowDateTimeString(),
-                lastDrinkDate = timeProvider.nowDateString(),
+                lastDrinkDate = null,
                 streakDays = null,
                 dailyGoal = null,
                 totalDays = null,
