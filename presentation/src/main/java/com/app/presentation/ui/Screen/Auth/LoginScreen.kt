@@ -58,7 +58,6 @@ fun LoginScreen(
     onSignInClick: () -> Unit,
     onKaKaoClick: () -> Unit,
     onNaverClick: () -> Unit,
-    onGoogleClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity ?: return
@@ -271,7 +270,6 @@ fun LoginScreenPreView() {
         onSignInClick = {},
         onKaKaoClick = {},
         onNaverClick = {},
-        onGoogleClick = {},
         viewModel = fakeViewModel,
         credentialManager = fakeCredentialManager,
         navController = NavController(context)

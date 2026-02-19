@@ -45,7 +45,6 @@ fun AppNavGraph(
                 onNaverClick = {
                     // TODO: naver 로그인 버튼클릭동작 구현
                 },
-                onGoogleClick = {},
                 navController = navController
             )
         }
