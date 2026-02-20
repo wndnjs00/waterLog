@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface AccountRepository {
     fun getAccountInfo(): StateFlow<UserInfo?>
 
-    suspend fun signInGoogle(userInfo: UserInfo)
+    suspend fun signIn(userInfo: UserInfo)
 
-    suspend fun logoutGoogle()
+    suspend fun logout()
 }

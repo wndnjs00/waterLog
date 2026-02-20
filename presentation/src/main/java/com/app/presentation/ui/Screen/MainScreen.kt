@@ -1,7 +1,7 @@
 package com.app.presentation.ui.Screen
 
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,14 +40,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import com.app.domain.model.UserInfo
 import com.app.presentation.R
 import com.app.presentation.ui.Screens
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
+import com.kakao.sdk.user.UserApiClient
 import kotlinx.coroutines.launch
 
 // 큰틀
@@ -142,6 +140,7 @@ fun MainNavigationScreen(modifier: Modifier = Modifier) {
 fun TopAppBars(viewModel: MainViewModel, credentialManager: CredentialManager, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     TopAppBar(
         title = { Text(stringResource(id = R.string.app_name), color = Color.White) },
@@ -165,14 +164,35 @@ fun TopAppBars(viewModel: MainViewModel, credentialManager: CredentialManager, n
             IconButton(onClick = {
                 coroutineScope.launch {
                     try {
-                        // 1) Firebase 로그아웃
-                        viewModel.logoutGoogle() // 내부에서 FirebaseAuth.signOut()이 실행된다고 가정
+                        when (userInfo?.loginProvider) {
+                            UserInfo.LoginProvider.GOOGLE -> {
+                                // 1) Firebase 로그아웃
+                                viewModel.logout() // 내부에서 FirebaseAuth.signOut()이 실행된다고 가정
 
-                        // 2) CredentialManager 정리
-                        runCatching {
-                            credentialManager.clearCredentialState(ClearCredentialStateRequest())
-                        }.onFailure { throwable ->
-                            throwable.printStackTrace()
+                                // 2) CredentialManager 정리
+                                runCatching {
+                                    credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                                }.onFailure { throwable ->
+                                    throwable.printStackTrace()
+                                }
+                            }
+
+                            UserInfo.LoginProvider.KAKAO -> {
+                                UserApiClient.instance.logout { error ->
+                                    if(error != null) {
+                                        Log.e("KAKAO_LOGOUT", "카카오 로그아웃 실패", error)
+                                    } else {
+                                        Log.d("KAKAO_LOGOUT", "카카오 로그아웃 성공")
+                                    }
+                                }
+
+                                // Firebase 로그아웃 + 내부 상태 정리
+                                viewModel.logout()
+                            }
+
+                            null -> {
+                                viewModel.logout()
+                            }
                         }
 
                         // 로그인 화면으로 이동

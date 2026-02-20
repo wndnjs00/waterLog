@@ -1,19 +1,12 @@
 package com.app.presentation.ui.Screen.Auth
 
 import android.app.Activity
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.TimeProvider
 import com.app.presentation.R
@@ -22,7 +15,6 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.launch
 
 suspend fun GoogleOnClick(
     viewModel: MainViewModel,
@@ -85,7 +77,7 @@ private fun handleSignInCredential(
                         if (task.isSuccessful) {
                             val user = auth.currentUser
                             user?.let {
-                                viewModel.signInGoogle(
+                                viewModel.signIn(
                                     UserInfo.UserInfoCreate(
                                         uid = it.uid,
                                         name = it.displayName ?: "닉네임없음",
@@ -103,7 +95,7 @@ private fun handleSignInCredential(
                             }
                         } else {
                             // 로그인 실패
-                            viewModel.logoutGoogle()
+                            viewModel.logout()
                             Toast.makeText(activity, "로그인 실패", Toast.LENGTH_SHORT).show()
                             Log.e("로그인 실패", "로그인 실패: ${task.exception}")
                         }

@@ -1,15 +1,20 @@
+@file:Suppress("UNREACHABLE_CODE")
+
 package com.app.presentation.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+
 import com.app.presentation.ui.Screen.Auth.LoginScreen
 import com.app.presentation.ui.Screen.MainScreen
 import com.app.presentation.ui.Screen.Auth.SignInScreen
 import com.app.presentation.ui.Screen.Auth.SignUpScreen
+import com.app.presentation.ui.Screen.Auth.kakaoLogin
 import com.app.presentation.viewModel.MainViewModel
 
 @Composable
@@ -18,6 +23,8 @@ fun AppNavGraph(
     viewModel: MainViewModel,
     credentialManager: CredentialManager
 ) {
+    val context = LocalContext.current
+
     NavHost(
         navController = navController,
         startDestination = Screens.Login.route
@@ -40,7 +47,16 @@ fun AppNavGraph(
                     navController.navigate(Screens.SignIn.route)
                 },
                 onKaKaoClick = {
-                    // TODO: kokao 로그인 버튼클릭동작 구현
+                    // kakao 로그인 버튼클릭동작
+                    kakaoLogin(
+                        context = context,
+                        viewModel = viewModel,
+                        onLoginSuccess = {
+                            navController.navigate(Screens.Main.route) {
+                                popUpTo(Screens.Login.route) { inclusive = true }
+                            }
+                        }
+                    )
                 },
                 onNaverClick = {
                     // TODO: naver 로그인 버튼클릭동작 구현
@@ -74,7 +90,11 @@ fun AppNavGraph(
         }
 
         composable(Screens.Main.route) {
-            MainScreen(viewModel = viewModel, credentialManager = credentialManager, navController = navController)
+            MainScreen(
+                viewModel = viewModel,
+                credentialManager = credentialManager,
+                navController = navController
+            )
         }
     }
 }
@@ -85,3 +105,4 @@ sealed class Screens(val route: String) {
     object SignIn : Screens("signin")
     object Main : Screens("main")
 }
+

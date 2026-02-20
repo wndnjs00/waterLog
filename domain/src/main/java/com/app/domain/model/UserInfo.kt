@@ -17,6 +17,7 @@ data class UserInfo(
 ) {
     enum class LoginProvider {
         GOOGLE,
+        KAKAO
     }
 
     companion object {

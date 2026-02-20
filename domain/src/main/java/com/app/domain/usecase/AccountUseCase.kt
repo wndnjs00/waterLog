@@ -12,11 +12,11 @@ class AccountUseCase @Inject constructor(
         return accountRepository.getAccountInfo()
     }
 
-    suspend fun signInGoogle(userInfo: UserInfo) {
-        accountRepository.signInGoogle(userInfo)
+    suspend fun signIn(userInfo: UserInfo) {
+        accountRepository.signIn(userInfo)
     }
 
-    suspend fun logoutGoogle() {
-        accountRepository.logoutGoogle()
+    suspend fun logout() {
+        accountRepository.logout()
     }
 }

@@ -18,7 +18,7 @@ class AccountRepositoryImpl @Inject constructor(
         return accountInfoFlow
     }
 
-    override suspend fun signInGoogle(userInfo: UserInfo) {
+    override suspend fun signIn(userInfo: UserInfo) {
         firestore.collection("users")
             .document(userInfo.uid)
             .set(userInfo)
@@ -26,7 +26,7 @@ class AccountRepositoryImpl @Inject constructor(
         accountInfoFlow.emit(userInfo)
     }
 
-    override suspend fun logoutGoogle() {
+    override suspend fun logout() {
         accountInfoFlow.emit(null)
         FirebaseAuth.getInstance().signOut()
     }
