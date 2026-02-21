@@ -4,10 +4,16 @@ import android.content.Context
 import android.util.Log
 import com.app.domain.model.UserInfo
 import com.app.presentation.viewModel.MainViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.functions.FirebaseFunctions
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 fun kakaoLogin(
     context: Context,
@@ -22,8 +28,8 @@ fun kakaoLogin(
             }
 
             token != null -> {
-                loginWithKakaoNickName(
-                    token = token,
+                loginWithFirebaseCustomToken(
+                    accessToken = token.accessToken,
                     viewModel = viewModel,
                     onLoginSuccess = onLoginSuccess
                 )
@@ -59,34 +65,43 @@ fun kakaoLogin(
     }
 }
 
-// 카카오계정으로 로그인했을대, 이름만 가져오는 함수 따로 빼기
-private fun loginWithKakaoNickName(
-    token: OAuthToken,
+private fun loginWithFirebaseCustomToken(
+    accessToken: String,
     viewModel: MainViewModel,
     onLoginSuccess: () -> Unit
 ) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val functions = FirebaseFunctions.getInstance()
+            val auth = FirebaseAuth.getInstance()
 
-    UserApiClient.instance.me { user, error ->
+            val result = functions
+                .getHttpsCallable("createCustomTokenWithKakao")
+                .call(mapOf("accessToken" to accessToken))
+                .await()
 
-        when {
-            error != null -> {
-                Log.e("kakao", "카카오 닉네임 가져오기 실패", error)
-            }
+            val data = result.data as Map<*, *>
 
-            user != null -> {
+            // Firebase 로그인
+            auth.signInWithCustomToken(data["customToken"] as String).await()
 
-                viewModel.signIn(
-                    UserInfo.UserInfoCreate(
-                        uid = user.id?.toString().orEmpty(),
-                        name = user.properties?.get("nickname").orEmpty(),
-                        email = user.kakaoAccount?.email,
-                        loginProvider = UserInfo.LoginProvider.KAKAO,
-                        timeProvider = viewModel.getTimeProvider()
-                    )
+            // Firestore 저장
+            viewModel.signIn(
+                UserInfo.UserInfoCreate(
+                    uid = data["uid"] as String,
+                    name = data["nickname"] as String,
+                    email = data["email"] as String?,
+                    loginProvider = UserInfo.LoginProvider.KAKAO,
+                    timeProvider = viewModel.getTimeProvider()
                 )
+            )
 
+            launch(Dispatchers.Main) {
                 onLoginSuccess()
             }
+
+        } catch (e: Exception) {
+            Log.e("FIREBASE_CUSTOM_LOGIN", "로그인 실패", e)
         }
     }
 }

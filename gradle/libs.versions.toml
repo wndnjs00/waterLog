@@ -16,6 +16,7 @@ ksp = "2.0.21-1.0.26"
 hilt = "2.55"
 # Hilt + Compose Navigation
 hiltNavigationCompose = "1.3.0"
+firebaseFunctionsKtx = "22.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ androidx-material = { module = "androidx.compose.material:material", version.ref
 navigation-compose = { group = "androidx.navigation" , name = "navigation-compose", version = "2.8.0"}
 # Hilt + Compose Navigation
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -103,4 +103,7 @@ dependencies {
 
     //ThreeTenABP 라이브러리 (시간변환 라이브러리)
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
+
+    // firebase functions
+    implementation("com.google.firebase:firebase-functions-ktx")
 }

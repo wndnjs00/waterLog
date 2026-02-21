@@ -66,6 +66,10 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
 
+    // firebase 연결
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+
     // firebase auth
     implementation("com.google.firebase:firebase-auth:24.0.1")
     implementation("com.google.android.gms:play-services-auth:21.4.0")
@@ -77,4 +81,7 @@ dependencies {
 
     // kakao 로그인
     implementation("com.kakao.sdk:v2-user:2.23.2")
+
+    // firebase functions
+    implementation("com.google.firebase:firebase-functions-ktx")
 }
