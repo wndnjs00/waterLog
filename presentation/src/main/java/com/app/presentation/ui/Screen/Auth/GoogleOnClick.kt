@@ -95,7 +95,7 @@ private fun handleSignInCredential(
                             }
                         } else {
                             // 로그인 실패
-                            viewModel.logout()
+                            viewModel.logout(UserInfo.LoginProvider.GOOGLE)
                             Toast.makeText(activity, "로그인 실패", Toast.LENGTH_SHORT).show()
                             Log.e("로그인 실패", "로그인 실패: ${task.exception}")
                         }

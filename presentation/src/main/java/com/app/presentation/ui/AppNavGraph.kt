@@ -15,6 +15,7 @@ import com.app.presentation.ui.Screen.MainScreen
 import com.app.presentation.ui.Screen.Auth.SignInScreen
 import com.app.presentation.ui.Screen.Auth.SignUpScreen
 import com.app.presentation.ui.Screen.Auth.kakaoLogin
+import com.app.presentation.ui.Screen.Auth.naverLogin
 import com.app.presentation.viewModel.MainViewModel
 
 @Composable
@@ -59,7 +60,16 @@ fun AppNavGraph(
                     )
                 },
                 onNaverClick = {
-                    // TODO: naver 로그인 버튼클릭동작 구현
+                    // naver 로그인 버튼클릭동작
+                    naverLogin(
+                        context = context,
+                        viewModel = viewModel,
+                        onLoginSuccess = {
+                            navController.navigate(Screens.Main.route){
+                                popUpTo(Screens.Login.route) {inclusive = true}
+                            }
+                        }
+                    )
                 },
                 navController = navController
             )

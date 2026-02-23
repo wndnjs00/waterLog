@@ -16,7 +16,7 @@ class AccountUseCase @Inject constructor(
         accountRepository.signIn(userInfo)
     }
 
-    suspend fun logout() {
-        accountRepository.logout()
+    suspend fun logout(loginProvider: UserInfo.LoginProvider?) {
+        accountRepository.logout(loginProvider)
     }
 }

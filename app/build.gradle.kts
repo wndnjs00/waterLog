@@ -20,7 +20,10 @@ if (localPropertiesFile.exists()) {
 
 val kakaoKey = localProperties.getProperty("kakao_native_app_key")
     ?: throw GradleException("kakao_native_app_key not found in local.properties")
-
+val naverClientId = localProperties.getProperty("naver_client_id")
+    ?: throw GradleException("naver_client_id not found in local.properties")
+val naverClientSecret = localProperties.getProperty("naver_client_secret")
+    ?: throw GradleException("naver_client_secret not found in local.properties")
 
 android {
     namespace = "com.app.waterlog"
@@ -37,11 +40,9 @@ android {
 
         manifestPlaceholders["kakao_native_app_key"] = kakaoKey
 
-        buildConfigField(
-            "String",
-            "KAKAO_NATIVE_APP_KEY",
-            "\"$kakaoKey\""
-        )
+        buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"$kakaoKey\"")
+        buildConfigField("String", "NAVER_CLIENT_ID", "\"$naverClientId\"")
+        buildConfigField("String", "NAVER_CLIENT_SECRET", "\"$naverClientSecret\"")
     }
 
     compileOptions {
@@ -106,4 +107,7 @@ dependencies {
 
     // firebase functions
     implementation("com.google.firebase:firebase-functions-ktx")
+
+    // Naver SDK
+    implementation("com.navercorp.nid:oauth:5.11.2")
 }

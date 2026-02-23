@@ -8,6 +8,7 @@ import com.app.domain.usecase.AccountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.log
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -23,9 +24,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun logout() {
+    fun logout(loginProvider: UserInfo.LoginProvider) {
         viewModelScope.launch {
-            accountUseCase.logout()
+            accountUseCase.logout(loginProvider)
         }
     }
 

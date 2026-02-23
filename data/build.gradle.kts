@@ -58,4 +58,10 @@ dependencies {
 
     //ThreeTenABP 라이브러리 (시간변환 라이브러리)
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
+
+    // kakao 로그인
+    implementation("com.kakao.sdk:v2-user:2.23.2")
+
+    // Naver SDK
+    implementation("com.navercorp.nid:oauth:5.11.2")
 }

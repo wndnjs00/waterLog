@@ -47,6 +47,9 @@ import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
 import com.kakao.sdk.user.UserApiClient
+import com.navercorp.nid.NidOAuth
+import com.navercorp.nid.core.data.errorcode.NidOAuthErrorCode
+import com.navercorp.nid.oauth.util.NidOAuthCallback
 import kotlinx.coroutines.launch
 
 // 큰틀
@@ -62,7 +65,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel(), credentialManager: Cr
     }
 
     Scaffold(
-        topBar = { TopAppBars(viewModel = viewModel, credentialManager = credentialManager, navController = navController) },
+        topBar = { TopAppBars(viewModel = viewModel, navController = navController) },
 //        bottomBar = {
 //            MainBottomNavigationBar(navController)
 //        }
@@ -137,9 +140,8 @@ fun MainNavigationScreen(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBars(viewModel: MainViewModel, credentialManager: CredentialManager, navController: NavHostController) {
+fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     TopAppBar(
@@ -163,47 +165,12 @@ fun TopAppBars(viewModel: MainViewModel, credentialManager: CredentialManager, n
 
             IconButton(onClick = {
                 coroutineScope.launch {
-                    try {
-                        when (userInfo?.loginProvider) {
-                            UserInfo.LoginProvider.GOOGLE -> {
-                                // 1) Firebase 로그아웃
-                                viewModel.logout() // 내부에서 FirebaseAuth.signOut()이 실행된다고 가정
-
-                                // 2) CredentialManager 정리
-                                runCatching {
-                                    credentialManager.clearCredentialState(ClearCredentialStateRequest())
-                                }.onFailure { throwable ->
-                                    throwable.printStackTrace()
-                                }
-                            }
-
-                            UserInfo.LoginProvider.KAKAO -> {
-                                UserApiClient.instance.logout { error ->
-                                    if(error != null) {
-                                        Log.e("KAKAO_LOGOUT", "카카오 로그아웃 실패", error)
-                                    } else {
-                                        Log.d("KAKAO_LOGOUT", "카카오 로그아웃 성공")
-                                    }
-                                }
-
-                                // Firebase 로그아웃 + 내부 상태 정리
-                                viewModel.logout()
-                            }
-
-                            null -> {
-                                viewModel.logout()
-                            }
-                        }
-
+                    userInfo?.loginProvider?.let { viewModel.logout(it) }
                         // 로그인 화면으로 이동
                         navController.navigate(Screens.Login.route) {
                             popUpTo(Screens.Login.route) { inclusive = true }
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Toast.makeText(context, "로그아웃 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
                     }
-                }
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.logout),

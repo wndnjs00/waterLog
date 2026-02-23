@@ -8,5 +8,5 @@ interface AccountRepository {
 
     suspend fun signIn(userInfo: UserInfo)
 
-    suspend fun logout()
+    suspend fun logout(loginProvider: UserInfo.LoginProvider?)
 }

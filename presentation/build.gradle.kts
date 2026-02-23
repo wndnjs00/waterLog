@@ -84,4 +84,7 @@ dependencies {
 
     // firebase functions
     implementation("com.google.firebase:firebase-functions-ktx")
+
+    // Naver SDK
+    implementation("com.navercorp.nid:oauth:5.11.2")
 }
