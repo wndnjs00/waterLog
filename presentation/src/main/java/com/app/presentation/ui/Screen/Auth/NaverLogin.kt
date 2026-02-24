@@ -63,8 +63,8 @@ private fun loginWithFirebaseCustomTokenFromNaver(
 
             auth.signInWithCustomToken(data["customToken"] as String).await()
 
-            viewModel.signIn(
-                UserInfo.UserInfoCreate(
+            viewModel.saveUser(
+                UserInfo.userInfoCreate(
                     uid = data["uid"] as String,
                     name = data["nickname"] as String,
                     email = data["email"] as String,

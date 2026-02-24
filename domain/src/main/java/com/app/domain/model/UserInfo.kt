@@ -7,7 +7,7 @@ data class UserInfo(
     val uid: String,
     val name: String,
     val email: String?,
-    val loginProvider: LoginProvider,
+    val loginProvider: LoginProvider = LoginProvider.EMAIL,
     val createdAt: String, //회원가입 날짜
     val lastDrinkDate: String?, //마지막으로 물마신 날짜
     val streakDays: Int?,
@@ -23,7 +23,7 @@ data class UserInfo(
     }
 
     companion object {
-        fun UserInfoCreate(
+        fun userInfoCreate(
             uid: String,
             name: String?,
             email: String?,

@@ -77,8 +77,8 @@ private fun handleSignInCredential(
                         if (task.isSuccessful) {
                             val user = auth.currentUser
                             user?.let {
-                                viewModel.signIn(
-                                    UserInfo.UserInfoCreate(
+                                viewModel.saveUser(
+                                    UserInfo.userInfoCreate(
                                         uid = it.uid,
                                         name = it.displayName ?: "닉네임없음",
                                         email = it.email ?: "",

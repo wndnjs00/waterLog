@@ -196,7 +196,7 @@ fun SignUpScreen(
             onClick = { viewModel.signUpWithEmail(
                 email = email,
                 password = password,
-                name = email.substringBefore("@"), //TODO: 입력받는걸로 수정하기
+                name = email.substringBefore("@"), //TODO: 입력받는걸로 수정하기?
             ) },
             modifier = Modifier
                 .fillMaxWidth()

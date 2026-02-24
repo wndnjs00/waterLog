@@ -2,6 +2,8 @@ package com.app.data.repository
 
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import com.app.data.mapper.UserInfoMapper
+import com.app.data.model.UserInfoDto
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.AccountRepository
 import com.app.domain.repository.TimeProvider
@@ -29,9 +31,12 @@ class AccountRepositoryImpl @Inject constructor(
 
     // Firestore에 저장
     override suspend fun saveUserInfo(userInfo: UserInfo) {
+
+        val dto = UserInfoMapper.toDto(userInfo)
+
         firestore.collection("users")
             .document(userInfo.uid)
-            .set(userInfo)
+            .set(dto)
             .await()
         accountInfoFlow.emit(userInfo)
     }
@@ -59,9 +64,7 @@ class AccountRepositoryImpl @Inject constructor(
                 auth.signOut()
             }
 
-            UserInfo.LoginProvider.EMAIL -> {
-                auth.signOut()
-            }
+            UserInfo.LoginProvider.EMAIL -> auth.signOut()
 
             null -> auth.signOut()
         }
@@ -79,7 +82,7 @@ class AccountRepositoryImpl @Inject constructor(
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user ?: throw Exception("User is null")
 
-            val userInfo = UserInfo.UserInfoCreate(
+            val userInfo = UserInfo.userInfoCreate(
                 uid = user.uid,
                 name = name,
                 email = user.email,
@@ -99,21 +102,32 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun signInWithEmail(email: String, password: String): Result<UserInfo> {
         return try {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
-            val user = result.user ?: throw Exception("User is null")
+            auth.signInWithEmailAndPassword(email, password).await()
 
-            val snapshot = firestore.collection("users")
-                .document(user.uid)
-                .get()
-                .await()
+            val userInfo = loadUserFromFireStore()
+                ?: throw Exception("Firestore user not found")
 
-            val userInfo = snapshot.toObject(UserInfo::class.java) ?: throw Exception("Firestore user not found")
-
-            accountInfoFlow.emit(userInfo)
             Result.success(userInfo)
 
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    // 자동 로그인
+    override suspend fun loadUserFromFireStore(): UserInfo? {
+        val firebaseUser = auth.currentUser ?: return null
+
+        val snapshot = firestore.collection("users")
+            .document(firebaseUser.uid)
+            .get()
+            .await()
+
+        val dto = snapshot.toObject(UserInfoDto::class.java) ?: return null
+        val domain = UserInfoMapper.toDomain(dto)
+
+        accountInfoFlow.emit(domain)
+
+        return domain
     }
 }

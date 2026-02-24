@@ -86,8 +86,8 @@ private fun loginWithFirebaseCustomToken(
             auth.signInWithCustomToken(data["customToken"] as String).await()
 
             // Firestore 저장
-            viewModel.signIn(
-                UserInfo.UserInfoCreate(
+            viewModel.saveUser(
+                UserInfo.userInfoCreate(
                     uid = data["uid"] as String,
                     name = data["nickname"] as String,
                     email = data["email"] as String?,

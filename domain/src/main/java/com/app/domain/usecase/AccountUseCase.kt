@@ -12,7 +12,7 @@ class AccountUseCase @Inject constructor(
         return accountRepository.getAccountInfo()
     }
 
-    suspend fun signIn(userInfo: UserInfo) {
+    suspend fun saveUser(userInfo: UserInfo) {
         accountRepository.saveUserInfo(userInfo)
     }
 
@@ -26,5 +26,9 @@ class AccountUseCase @Inject constructor(
 
     suspend fun signInWithEmail(email: String, password: String): Result<UserInfo> {
         return accountRepository.signInWithEmail(email, password)
+    }
+
+    suspend fun loadUser(): UserInfo? {
+        return accountRepository.loadUserFromFireStore()
     }
 }

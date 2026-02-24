@@ -79,7 +79,9 @@ fun AppNavGraph(
             SignUpScreen(
                 viewModel = viewModel,
                 onSignUpComplete = {
-                    navController.popBackStack() // 회원가입 완료후 로그인으로 복귀
+                    navController.navigate(Screens.Main.route) {
+                        popUpTo(Screens.Login.route) { inclusive = true }
+                    }
                 },
             )
         }

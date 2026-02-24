@@ -17,4 +17,6 @@ interface AccountRepository {
     ): Result<UserInfo>
 
     suspend fun signInWithEmail(email: String, password: String): Result<UserInfo>
+    
+    suspend fun loadUserFromFireStore(): UserInfo?
 }

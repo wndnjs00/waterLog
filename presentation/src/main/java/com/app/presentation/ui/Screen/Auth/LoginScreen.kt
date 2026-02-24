@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.app.domain.model.UserInfo
 import com.app.presentation.R
@@ -56,27 +58,13 @@ fun LoginScreen(
     val context = LocalContext.current
     val activity = context as? Activity ?: return
     val coroutineScope = rememberCoroutineScope()
-    val firebaseAuth by lazy{FirebaseAuth.getInstance()}
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     // 로그인되어있는 사용자 확인
-    // 사용자 정보 가져오기(자동로그인 위함)
-    LaunchedEffect(Unit) {
-        if(firebaseAuth.currentUser != null){
-            firebaseAuth.currentUser?.let{
-                viewModel.signIn(
-                    UserInfo.UserInfoCreate(
-                        uid = it.uid,
-                        name = it.displayName ?: "",
-                        email = it.email,
-                        loginProvider = UserInfo.LoginProvider.GOOGLE,
-                        timeProvider = viewModel.getTimeProvider()
-                    )
-                )
-
-                // 바로 MainScreen으로 이동
-                navController.navigate(Screens.Main.route) {
-                    popUpTo(Screens.Login.route) { inclusive = true }
-                }
+    LaunchedEffect(userInfo) {
+        if (userInfo != null) {
+            navController.navigate(Screens.Main.route){
+                popUpTo(Screens.Login.route) {inclusive = true}
             }
         }
     }

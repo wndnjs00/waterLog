@@ -2,7 +2,6 @@ package com.app.presentation.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.TimeProvider
 import com.app.domain.usecase.AccountUseCase
@@ -12,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.log
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -28,9 +26,19 @@ class MainViewModel @Inject constructor(
     private val _signInState = MutableStateFlow<EmailAuthState>(EmailAuthState.Idle)
     val signInState: StateFlow<EmailAuthState> = _signInState.asStateFlow()
 
-    fun signIn(userInfo: UserInfo) {
+    init {
+        autoLogin()
+    }
+
+    fun autoLogin(){
         viewModelScope.launch {
-            accountUseCase.signIn(userInfo)
+            accountUseCase.loadUser()
+        }
+    }
+
+    fun saveUser(userInfo: UserInfo) {
+        viewModelScope.launch {
+            accountUseCase.saveUser(userInfo)
         }
     }
 
