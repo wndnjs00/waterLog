@@ -18,20 +18,21 @@ data class UserInfo(
     enum class LoginProvider {
         GOOGLE,
         KAKAO,
-        NAVER
+        NAVER,
+        EMAIL,
     }
 
     companion object {
         fun UserInfoCreate(
             uid: String,
-            name: String,
+            name: String?,
             email: String?,
             loginProvider: LoginProvider,
             timeProvider: TimeProvider
         ): UserInfo {
             return UserInfo(
                 uid = uid,
-                name = name,
+                name = name ?: "",
                 email = email,
                 loginProvider = loginProvider,
                 createdAt = timeProvider.nowDateTimeString(),

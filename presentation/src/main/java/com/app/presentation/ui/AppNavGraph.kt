@@ -77,25 +77,22 @@ fun AppNavGraph(
 
         composable(Screens.SignUp.route) {
             SignUpScreen(
-                // TODO: Firebase에 회원가입정보 생성
+                viewModel = viewModel,
                 onSignUpComplete = {
                     navController.popBackStack() // 회원가입 완료후 로그인으로 복귀
-                }
+                },
             )
         }
 
         composable(Screens.SignIn.route) {
             SignInScreen(
+                viewModel = viewModel,
                 onLoginSuccess = {
-                    // TODO: 로그인완료버튼 클릭 동작
-                    // TODO: Firebase에 회원가입정보가 있는지 확인
                     // MainScreen으로 이동
                     navController.navigate(Screens.Main.route) {
-                        popUpTo(Screens.Login.route) {
-                            inclusive = true
-                        } //로그인 후 "뒤로가기" 눌러도 다시 로그인화면으로 안 돌아감
+                        popUpTo(Screens.Login.route) { inclusive = true } //로그인 후 "뒤로가기" 눌러도 다시 로그인화면으로 안 돌아감
                     }
-                }
+                },
             )
         }
 

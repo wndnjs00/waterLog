@@ -1,5 +1,8 @@
+@file:Suppress("UNREACHABLE_CODE")
+
 package com.app.presentation.ui.Screen.Auth
 
+import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,9 +17,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.app.presentation.viewModel.EmailAuthState
+import com.app.presentation.viewModel.MainViewModel
 
 @Composable
 fun SignUpScreen(
+    viewModel: MainViewModel,
     onSignUpComplete: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -26,6 +35,16 @@ fun SignUpScreen(
     var termsChecked by remember { mutableStateOf(false) }
     var privacyChecked by remember { mutableStateOf(false) }
 
+    val signUpState by viewModel.signUpState.collectAsStateWithLifecycle()
+
+    // 회원가입 성공시 화면이동
+    LaunchedEffect(signUpState) {
+        if(signUpState is EmailAuthState.Success) {
+            onSignUpComplete()
+            viewModel.resetSignUpState()
+        }
+    }
+
     // 체크상태 자동동기화
     LaunchedEffect(termsChecked, privacyChecked) {
         allChecked = termsChecked && privacyChecked
@@ -33,7 +52,7 @@ fun SignUpScreen(
 
     // 유효성 검사
     val isValidEmail = remember(email) {
-        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     val isValidPassword = remember(password) {
@@ -42,6 +61,9 @@ fun SignUpScreen(
     }
 
     val isPassWordMatch = password == confirmPassword && password.isNotBlank()
+    val isFormValid =
+        isValidEmail && isValidPassword && termsChecked && privacyChecked && isPassWordMatch
+    val isLoading = signUpState is EmailAuthState.Loading
 
     Column(
         modifier = Modifier
@@ -169,15 +191,17 @@ fun SignUpScreen(
 
         Spacer(modifier = Modifier.height(60.dp))
 
-        val isFormValid =
-            isValidEmail && isValidPassword && termsChecked && privacyChecked && isPassWordMatch
 
         Button(
-            onClick = onSignUpComplete,
+            onClick = { viewModel.signUpWithEmail(
+                email = email,
+                password = password,
+                name = email.substringBefore("@"), //TODO: 입력받는걸로 수정하기
+            ) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = isFormValid,
+            enabled = isFormValid && !isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isFormValid) {
                     Color(0xFF4E7CF0)
@@ -186,7 +210,11 @@ fun SignUpScreen(
                 }
             )
         ) {
-            Text(text = "가입하기", color = Color.White, fontSize = 16.sp)
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+            } else {
+                Text(text = "가입하기", color = Color.White, fontSize = 16.sp)
+            }
         }
     }
 }
@@ -194,5 +222,8 @@ fun SignUpScreen(
 @Composable
 @Preview(showBackground = true)
 fun SignUpScreenPreview() {
-    SignUpScreen { }
+    SignUpScreen (
+        viewModel = hiltViewModel(),
+        onSignUpComplete = {}
+    )
 }

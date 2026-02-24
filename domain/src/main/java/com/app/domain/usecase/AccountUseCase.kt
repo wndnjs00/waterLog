@@ -13,10 +13,18 @@ class AccountUseCase @Inject constructor(
     }
 
     suspend fun signIn(userInfo: UserInfo) {
-        accountRepository.signIn(userInfo)
+        accountRepository.saveUserInfo(userInfo)
     }
 
     suspend fun logout(loginProvider: UserInfo.LoginProvider?) {
         accountRepository.logout(loginProvider)
+    }
+
+    suspend fun signUpWithEmail(email: String, password: String, name: String): Result<UserInfo> {
+        return accountRepository.signUpWithEmail(email, password, name)
+    }
+
+    suspend fun signInWithEmail(email: String, password: String): Result<UserInfo> {
+        return accountRepository.signInWithEmail(email, password)
     }
 }

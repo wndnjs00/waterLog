@@ -1,6 +1,7 @@
 package com.app.presentation.ui.Screen.Auth
 
 
+import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,24 +16,42 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.app.presentation.viewModel.EmailAuthState
+import com.app.presentation.viewModel.MainViewModel
 
 @Composable
 fun SignInScreen(
+    viewModel: MainViewModel,
     onLoginSuccess: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    val signInState by viewModel.signInState.collectAsStateWithLifecycle()
+
+    // 로그인 성공시 화면이동
+    LaunchedEffect(signInState) {
+        if (signInState is EmailAuthState.Success) {
+            onLoginSuccess()
+            viewModel.resetSignInState()
+        }
+    }
+
     // 유효성 검사
     val isValidEmail = remember(email) {
-        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     val isValidPassword = remember(password) {
         // 8자 이상, 영문,숫자,특수문자 포함
         Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#\$%^&*()_+=-]).{8,}\$").matches(password)
     }
-
+    val isFormValid =
+        isValidEmail && isValidPassword && email.isNotBlank() && password.isNotBlank()
+    val isLoading = signInState is EmailAuthState.Loading
 
     Column(
         modifier = Modifier
@@ -101,24 +120,27 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(80.dp))
 
-        val isFormValid =
-            isValidEmail && isValidPassword && email.isNotBlank() && password.isNotBlank()
-
         Button(
-            onClick = onLoginSuccess,
+            onClick = {
+                viewModel.signInWithEmail(email, password)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = isFormValid,
+            enabled = isFormValid && !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isFormValid) {
+                containerColor = if (isFormValid && !isLoading) {
                     Color(0xFF4E7CF0)
                 } else {
                     Color.LightGray
                 }
             )
         ) {
-            Text(text = "로그인 하기", color = Color.White, fontSize = 16.sp)
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+            } else {
+                Text(text = "로그인 하기", color = Color.White, fontSize = 16.sp)
+            }
         }
     }
 }
@@ -126,5 +148,8 @@ fun SignInScreen(
 @Composable
 @Preview(showBackground = true)
 fun SignInScreenPreview() {
-    SignInScreen { }
+    SignInScreen(
+        viewModel = hiltViewModel(),
+        onLoginSuccess = {},
+    )
 }
