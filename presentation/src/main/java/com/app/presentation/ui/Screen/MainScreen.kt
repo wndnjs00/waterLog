@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -51,6 +52,7 @@ import com.navercorp.nid.NidOAuth
 import com.navercorp.nid.core.data.errorcode.NidOAuthErrorCode
 import com.navercorp.nid.oauth.util.NidOAuthCallback
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 // 큰틀
 @Composable
@@ -60,7 +62,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel(), credentialManager: Cr
 
     LaunchedEffect(accountUserInfo) {
         accountUserInfo?.let {
-            Toast.makeText(context, "로그인유저 이름: ${it.name}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "${it.name}님 환영합니다", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -145,9 +147,12 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     TopAppBar(
-        title = { Text(stringResource(id = R.string.app_name), color = Color.White) },
-        colors = TopAppBarDefaults.largeTopAppBarColors(
-            actionIconContentColor = Color.White
+        title = { Text(stringResource(id = R.string.app_name)) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MainBlue,
+            titleContentColor = Color.White,
+            actionIconContentColor = Color.White,
+            navigationIconContentColor = Color.White
         ),
         actions = {
             IconButton(onClick = {}) {
