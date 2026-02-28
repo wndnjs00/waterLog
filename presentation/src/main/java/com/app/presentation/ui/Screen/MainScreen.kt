@@ -1,11 +1,15 @@
 package com.app.presentation.ui.Screen
 
+import MonthlyChartScreen
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -24,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -42,11 +47,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.domain.model.UserInfo
+import com.app.domain.model.WaterLog
 import com.app.presentation.R
+import com.app.presentation.ui.Screen.Main.CircularWaterProgress
+import com.app.presentation.ui.Screen.Main.MainNavigationContent
+import com.app.presentation.ui.Screen.Main.WaterControlSection
+import com.app.presentation.ui.Screen.Main.WeeklyChartScreen
 import com.app.presentation.ui.Screens
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
+import com.app.presentation.viewModel.WaterViewModel
 import com.kakao.sdk.user.UserApiClient
 import com.navercorp.nid.NidOAuth
 import com.navercorp.nid.core.data.errorcode.NidOAuthErrorCode
@@ -56,7 +67,11 @@ import okhttp3.internal.wait
 
 // 큰틀
 @Composable
-fun MainScreen(viewModel: MainViewModel = hiltViewModel(), credentialManager: CredentialManager, navController: NavHostController) {
+fun MainScreen(
+    viewModel: MainViewModel = hiltViewModel(),
+    credentialManager: CredentialManager,
+    navController: NavHostController
+) {
     val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -128,15 +143,25 @@ fun MainBottomNavigationBar(navController: NavHostController) {
 
 //각각에 들어갈 화면 구현
 @Composable
-fun MainNavigationScreen(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Main 화면")
+fun MainNavigationScreen(
+    viewModel: WaterViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
+) {
+    val todayLog by viewModel.todayLog.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadToday()
+        viewModel.loadWeekly()
+        viewModel.loadMonthly()
+    }
+
+    todayLog?.let { log ->
+        MainNavigationContent(
+            log = log,
+            onAdd = { viewModel.addCup() },
+            onRemove = { viewModel.removeCup() },
+            modifier = modifier
+        )
     }
 }
 
@@ -187,16 +212,45 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
 }
 
 
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "목표달성 못함")
 @Composable
-fun GreetingPreview() {
-    val fakeViewModel = MainViewModel(
-        accountUseCase = TODO(),
-        timeProvider = TODO(),
+fun MainNavigationScreenProgressPreview() {
+
+    val fakeLog = WaterLog(
+        date = "2026/02/27",
+        cups = 5,
+        targetCups = 8,
+        totalMl = 1250,
+        updatedAt = "2026/02/27 15:20:00"
     )
 
     WaterLogTheme {
-        MainScreen(viewModel = fakeViewModel, credentialManager = TODO(), navController = TODO())
+        MainNavigationContent(
+            log = fakeLog,
+            onAdd = {},
+            onRemove = {},
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "목표달성함")
+@Composable
+fun MainNavigationScreenGoalPreview() {
+    val goalFakeLog = WaterLog(
+        date = "2026/02/27",
+        cups = 8,
+        targetCups = 8,
+        totalMl = 2000,
+        updatedAt = "2026/02/27 15:25:00"
+    )
+
+    WaterLogTheme {
+        MainNavigationContent(
+            log = goalFakeLog,
+            onAdd = {},
+            onRemove = {},
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
