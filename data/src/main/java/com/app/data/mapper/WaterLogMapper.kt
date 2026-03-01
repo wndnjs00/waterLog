@@ -11,7 +11,8 @@ object WaterLogMapper {
             cups = dto.cups ?: 0,
             targetCups = dto.targetCups ?: 8,
             totalMl = dto.totalMl ?: 0,
-            updatedAt = dto.updatedAt ?: ""
+            updatedAt = dto.updatedAt ?: "",
+            streak = dto.streak ?: 0
         )
     }
     
@@ -22,6 +23,7 @@ object WaterLogMapper {
             targetCups = domain.targetCups,
             totalMl = domain.totalMl,
             updatedAt = domain.updatedAt,
+            streak = domain.streak
         )
     }
 }

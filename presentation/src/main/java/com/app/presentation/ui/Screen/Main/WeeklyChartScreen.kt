@@ -4,23 +4,79 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.viewModel.MainViewModel
 import com.app.presentation.viewModel.WaterViewModel
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.decoration.HorizontalLine
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.common.Fill
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
+
+private val weekDaysKey = ExtraStore.Key<List<String>>()
+private val goalKey = ExtraStore.Key<Double>()
+
+@Composable
+private fun WeeklyChartContent(
+    modelProducer: CartesianChartModelProducer,
+    goal: Int?,
+    modifier: Modifier = Modifier,
+) {
+    val goalLabel = goal?.let { "목표 $it 잔" } ?: ""
+    val goalLineComponent = rememberLineComponent(Fill(MainBlue.toArgb()), 2.dp)
+    val goalLine = if (goal != null) {
+        HorizontalLine(
+            y = { it[goalKey] },
+            line = goalLineComponent,
+            label = { _ -> goalLabel },
+        )
+    } else null
+
+    CartesianChartHost(
+        chart = rememberCartesianChart(
+            rememberColumnCartesianLayer(
+                columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+                    listOf(rememberLineComponent(Fill(MainBlue.toArgb()), 12.dp))
+                )
+            ),
+            startAxis = VerticalAxis.rememberStart(),
+            bottomAxis = HorizontalAxis.rememberBottom(
+                valueFormatter = CartesianValueFormatter { context, x, _ ->
+                    (context.model.extraStore[weekDaysKey] ?: emptyList()).getOrNull(x.toInt()) ?: ""
+                }
+            ),
+            decorations = listOfNotNull(goalLine),
+        ),
+        modelProducer = modelProducer,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(240.dp),
+        scrollState = rememberVicoScrollState(scrollEnabled = false),
+    )
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -31,70 +87,59 @@ fun WeeklyChartScreen(
     val logs by waterViewModel.weeklyLogs.collectAsState()
     val userInfo by accountViewModel.userInfo.collectAsState()
 
-    AndroidView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp),
+    val modelProducer = remember { CartesianChartModelProducer() }
 
-        factory = { context ->
-            BarChart(context).apply {
-                description.isEnabled = false
-                setDrawGridBackground(false)
-                setDrawBarShadow(false)
-                setFitBars(true)
+    LaunchedEffect(logs, userInfo) {
+        val weekDays = listOf("월", "화", "수", "목", "금", "토", "일")
+        val logMap = logs.associateBy {
+            LocalDate.parse(it.date).dayOfWeek.value - 1
+        }
+        val yValues = (0..6).map { index ->
+            (logMap[index]?.cups?.toFloat() ?: 0f).toDouble()
+        }
 
-                axisRight.isEnabled = false
-
-                axisLeft.apply {
-                    axisMinimum = 0f
-                    granularity = 1f
+        modelProducer.runTransaction {
+            columnSeries { series(yValues) }
+            extras { extras ->
+                extras[weekDaysKey] = weekDays
+                userInfo?.dailyGoal?.let { goal ->
+                    extras[goalKey] = goal.toDouble()
+                } ?: run {
+                    extras.remove(goalKey)
                 }
+            }
+        }
+    }
 
-                xAxis.apply {
-                    position = XAxis.XAxisPosition.BOTTOM
-                    setDrawGridLines(false)
-                    granularity = 1f
-                    labelCount = 7
+    WeeklyChartContent(
+        modelProducer = modelProducer,
+        goal = userInfo?.dailyGoal,
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WeeklyChartScreenPreview() {
+    val weekDays = listOf("월", "화", "수", "목", "금", "토", "일")
+    val sampleYValues = listOf(3.0, 5.0, 2.0, 8.0, 4.0, 6.0, 5.0)
+    val previewGoal = 8
+
+    val modelProducer = remember {
+        CartesianChartModelProducer().apply {
+            runBlocking {
+                runTransaction {
+                    columnSeries { series(sampleYValues) }
+                    extras { extras ->
+                        extras[weekDaysKey] = weekDays
+                        extras[goalKey] = previewGoal.toDouble()
+                    }
                 }
-
-                legend.isEnabled = false
             }
-        },
-        update = { chart ->
-            val weekDays = listOf("월", "화", "수", "목", "금", "토", "일")
+        }
+    }
 
-            val logMap = logs.associateBy {
-                LocalDate.parse(it.date).dayOfWeek.value - 1
-            }
-
-            val entries = (0..6).map { index ->
-                BarEntry(index.toFloat(), logMap[index]?.cups?.toFloat() ?: 0f)
-            }
-
-            val dataSet = BarDataSet(entries, "")
-            dataSet.color = MainBlue.toArgb()
-
-            val data = BarData(dataSet)
-            data.barWidth = 0.6f
-
-            chart.data = data
-
-            chart.xAxis.valueFormatter = IndexAxisValueFormatter(weekDays)
-            chart.xAxis.axisMinimum = -0.5f
-            chart.xAxis.axisMaximum = 6.5f
-            chart.setFitBars(true)
-            chart.setDrawGridBackground(false)
-            chart.setExtraOffsets(8f, 8f, 8f, 8f)
-
-            // 목표선 초기화 후 추가
-            chart.axisLeft.removeAllLimitLines()
-
-            userInfo?.dailyGoal?.let { goal ->
-                val limitLine = LimitLine(goal.toFloat(), "목표 $goal 잔")
-                limitLine.lineWidth = 2f
-                chart.axisLeft.addLimitLine(limitLine)
-            }
-
-            chart.invalidate()
-        })
+    WeeklyChartContent(
+        modelProducer = modelProducer,
+        goal = previewGoal,
+    )
 }

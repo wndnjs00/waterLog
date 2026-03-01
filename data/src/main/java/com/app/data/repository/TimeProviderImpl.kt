@@ -9,8 +9,8 @@ import javax.inject.Inject
 
 
 class TimeProviderImpl @Inject constructor() : TimeProvider {
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     override fun nowDateTimeString(): String {
         return LocalDateTime.now().format(dateTimeFormatter)

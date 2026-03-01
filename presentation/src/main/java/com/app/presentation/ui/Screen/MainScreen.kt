@@ -1,15 +1,9 @@
 package com.app.presentation.ui.Screen
 
-import MonthlyChartScreen
-import android.annotation.SuppressLint
-import android.util.Log
+import android.os.Build
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -18,7 +12,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -66,6 +59,7 @@ import kotlinx.coroutines.launch
 import okhttp3.internal.wait
 
 // 큰틀
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(),
@@ -142,6 +136,7 @@ fun MainBottomNavigationBar(navController: NavHostController) {
 }
 
 //각각에 들어갈 화면 구현
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavigationScreen(
     viewModel: WaterViewModel = hiltViewModel(),
@@ -212,6 +207,8 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "목표달성 못함")
 @Composable
 fun MainNavigationScreenProgressPreview() {
@@ -221,19 +218,38 @@ fun MainNavigationScreenProgressPreview() {
         cups = 5,
         targetCups = 8,
         totalMl = 1250,
-        updatedAt = "2026/02/27 15:20:00"
+        updatedAt = "2026/02/27 15:20:00",
+        streak = 6,
     )
 
     WaterLogTheme {
-        MainNavigationContent(
-            log = fakeLog,
-            onAdd = {},
-            onRemove = {},
-            modifier = Modifier.fillMaxSize()
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("WaterLog") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MainBlue,
+                        titleContentColor = Color.White
+                    )
+                )
+            }
+        ) { padding ->
+
+            MainNavigationContent(
+                log = fakeLog,
+                onAdd = {},
+                onRemove = {},
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            )
+        }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, name = "목표달성함")
 @Composable
 fun MainNavigationScreenGoalPreview() {
@@ -242,15 +258,31 @@ fun MainNavigationScreenGoalPreview() {
         cups = 8,
         targetCups = 8,
         totalMl = 2000,
-        updatedAt = "2026/02/27 15:25:00"
+        updatedAt = "2026/02/27 15:25:00",
+        streak = 10
     )
 
     WaterLogTheme {
-        MainNavigationContent(
-            log = goalFakeLog,
-            onAdd = {},
-            onRemove = {},
-            modifier = Modifier.fillMaxSize()
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("WaterLog") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MainBlue,
+                        titleContentColor = Color.White
+                    )
+                )
+            }
+        ) { padding ->
+
+            MainNavigationContent(
+                log = goalFakeLog,
+                onAdd = {},
+                onRemove = {},
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            )
+        }
     }
 }

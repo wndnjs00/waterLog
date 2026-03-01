@@ -111,6 +111,4 @@ dependencies {
     // Naver SDK
     implementation("com.navercorp.nid:oauth:5.11.2")
 
-    // MPAndroidChart 의존성
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

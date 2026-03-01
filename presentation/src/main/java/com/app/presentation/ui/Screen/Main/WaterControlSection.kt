@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,53 +40,78 @@ fun WaterControlSection(
     onAdd: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        RoundedButton(
-            backgroundColor = Color(0xFFE0E0E0),
-            contentColor = Color.DarkGray,
-            text = "-",
-            onClick = onRemove
+            .padding(horizontal = 24.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.White)
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Text(
+            text = "물 한 잔 마셨나요?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
         )
 
-        Box(
-            modifier = Modifier
-                .width(150.dp)
-                .height(110.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFEAF2FF)),
-            contentAlignment = Alignment.Center
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            RoundedButton(
+                backgroundColor = Color(0xFFE0E0E0),
+                contentColor = Color.DarkGray,
+                text = "-",
+                onClick = onRemove
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(110.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFEAF2FF)),
+                contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.water_drop_img),
-                    contentDescription = "water_image",
-                    modifier = Modifier.size(28.dp)
-                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Image(
+                        painter = painterResource(id = R.drawable.water_drop_img),
+                        contentDescription = "water_image",
+                        modifier = Modifier.size(28.dp)
+                    )
 
-                Text(
-                    text = "${cups * 250} ml",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.DarkGray
-                )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "${cups * 250} ml",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.DarkGray
+                    )
+                }
             }
+
+            RoundedButton(
+                backgroundColor = MainBlue,
+                contentColor = Color.White,
+                text = "+",
+                onClick = onAdd
+            )
         }
 
-        RoundedButton(
-            backgroundColor = MainBlue,
-            contentColor = Color.White,
-            text = "+",
-            onClick = onAdd
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "한 잔 = 250ml 기준",
+            fontSize = 13.sp,
+            color = Color.Black
         )
     }
 }

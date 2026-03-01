@@ -88,6 +88,6 @@ dependencies {
     // Naver SDK
     implementation("com.navercorp.nid:oauth:5.11.2")
 
-    // MPAndroidChart 의존성
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    // Vico 차트 (Compose)
+    implementation("com.patrykandpatrick.vico:compose:2.1.3")
 }

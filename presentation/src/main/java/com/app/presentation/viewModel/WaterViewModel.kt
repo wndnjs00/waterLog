@@ -39,7 +39,8 @@ class WaterViewModel @Inject constructor(
                     cups = 0,
                     targetCups = user.dailyGoal ?: 8,
                     totalMl = 0,
-                    updatedAt = timeProvider.nowDateTimeString()
+                    updatedAt = timeProvider.nowDateTimeString(),
+                    streak = user.streakDays ?: 0
                 )
             _todayLog.value = log
         }
@@ -76,6 +77,10 @@ class WaterViewModel @Inject constructor(
             waterUseCase.saveWithAchievement(user.uid, newLog)
 
             _todayLog.value = newLog
+
+            // 그래프 갱신
+            loadWeekly()
+            loadMonthly()
         }
     }
 
