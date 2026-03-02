@@ -2,9 +2,11 @@ package com.app.presentation.ui.Screen.Main
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +20,7 @@ import com.app.domain.model.WaterLog
 @Composable
 fun MainNavigationContent (
     log: WaterLog,
+    streakDays: Int,
     onAdd: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
@@ -32,7 +35,7 @@ fun MainNavigationContent (
         CircularWaterProgress(
             cups = log.cups,
             target = log.targetCups,
-            streak = log.streak,
+            streak = streakDays,
         )
 
         Spacer(modifier = Modifier.height(24.dp))

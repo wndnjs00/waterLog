@@ -37,10 +37,9 @@ class WaterViewModel @Inject constructor(
                 ?: WaterLog(
                     date = date,
                     cups = 0,
-                    targetCups = user.dailyGoal ?: 8,
+                    targetCups = user.dailyGoal,
                     totalMl = 0,
                     updatedAt = timeProvider.nowDateTimeString(),
-                    streak = user.streakDays ?: 0
                 )
             _todayLog.value = log
         }
@@ -79,6 +78,7 @@ class WaterViewModel @Inject constructor(
             _todayLog.value = newLog
 
             // 그래프 갱신
+            // TODO: 추후에는 매번 로드하지 않고, 오늘기록 변경은 로컬에서만 로드하고 / 서버에서는 날짜가 바꼈을때만 1번 불러오도록 수정하기
             loadWeekly()
             loadMonthly()
         }

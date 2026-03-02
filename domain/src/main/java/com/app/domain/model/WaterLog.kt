@@ -6,5 +6,4 @@ data class WaterLog(
     val targetCups: Int = 8,
     val totalMl: Int,
     val updatedAt: String,
-    val streak: Int = 0,
 )

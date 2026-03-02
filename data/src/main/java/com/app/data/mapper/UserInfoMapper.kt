@@ -17,7 +17,7 @@ object UserInfoMapper {
             createdAt = dto.createdAt ?: "",
             lastDrinkDate = dto.lastDrinkDate,
             streakDays = dto.streakDays,
-            dailyGoal = dto.dailyGoal,
+            dailyGoal = dto.dailyGoal ?: 8,
             totalDays = dto.totalDays,
             chatLimit = dto.chatLimit,
         )

@@ -11,7 +11,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Transaction
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-import kotlin.math.log
 
 class WaterRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
@@ -27,15 +26,6 @@ class WaterRepositoryImpl @Inject constructor(
 
         val dto = snapshot.toObject(WaterLogDto::class.java)
         return dto?.let{WaterLogMapper.toDomain(it)}
-    }
-
-    override suspend fun saveWaterLog(uid: String, waterLog: WaterLog) {
-        firestore.collection("users")
-            .document(uid)
-            .collection("water_logs")
-            .document(waterLog.date)
-            .set(WaterLogMapper.toDto(waterLog))
-            .await()
     }
 
     override suspend fun saveWithAchievement(uid: String, waterLog: WaterLog) {
@@ -60,8 +50,7 @@ class WaterRepositoryImpl @Inject constructor(
             }
 
             // water_log 저장
-            val updateLog = waterLog.copy(streak = newStreak)
-            transaction.set(logRef, WaterLogMapper.toDto(updateLog))
+            transaction.set(logRef, WaterLogMapper.toDto(waterLog))
 
             // user 업데이트
             transaction.update(
@@ -75,7 +64,7 @@ class WaterRepositoryImpl @Inject constructor(
             // 목표 달성체크
             if (waterLog.cups >= dailyGoal) {
                 createGoalNotification(transaction, userRef, dailyGoal)
-                createBadgeIfNotExist(
+                createBadge(
                     transaction, userRef,
                     BadgeType.DAY_2L,
                     "하루 2L 달성",
@@ -85,36 +74,36 @@ class WaterRepositoryImpl @Inject constructor(
             }
 
             if (newStreak == 7)
-                createBadgeIfNotExist(
+                createBadge(
                     transaction, userRef,
                     BadgeType.WEEK_7DAYS,
                     "7일 연속 달성",
-                    "일주일 연속 성공!",
+                    "7일 동안 꾸준히 물을 마셨습니다!",
                     waterLog.date
                 )
 
             if (newStreak == 30)
-                createBadgeIfNotExist(
+                createBadge(
                     transaction, userRef,
                     BadgeType.MONTH_30DAYS,
                     "30일 연속 달성",
-                    "한달 연속 성공!",
+                    "한달 동안 꾸준히 물을 마셨습니다!",
                     waterLog.date
                 )
 
             if (newStreak == 180)
-                createBadgeIfNotExist(
+                createBadge(
                     transaction, userRef,
                     BadgeType.KING_6MONTHS,
-                    "6개월 연속 달성",
-                    "진정한 물왕!",
+                    "6개월 꾸준함의 왕",
+                    "6개월 동안 꾸준히 물을 섭취했습니다!",
                     waterLog.date
                 )
         }.await()
     }
 
 
-    private fun createBadgeIfNotExist(
+    private fun createBadge(
         transaction: Transaction,
         userRef: DocumentReference,
         badgeId: String,
@@ -146,7 +135,7 @@ class WaterRepositoryImpl @Inject constructor(
 
         transaction.set(notificationRef, mapOf(
             "title" to "오늘 물 목표 달성 💧",
-            "message" to "하루 목표 ${dailyGoal}잔을 모두 마셨어요!",
+            "message" to "하루 목표 8잔을 모두 마셨어요!",
             "type" to "goal_achieved",
             "createdAt" to timeProvider.nowDateTimeString(),
             "isRead" to false

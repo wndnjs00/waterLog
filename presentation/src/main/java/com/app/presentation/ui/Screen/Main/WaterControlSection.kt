@@ -126,6 +126,7 @@ fun RoundedButton(
 ) {
     Box(
         modifier = Modifier
+            .padding(10.dp)
             .size(72.dp)
             .clip(CircleShape)
             .background(backgroundColor)

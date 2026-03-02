@@ -11,7 +11,7 @@ data class UserInfo(
     val createdAt: String, //회원가입 날짜
     val lastDrinkDate: String?, //마지막으로 물마신 날짜
     val streakDays: Int?,
-    val dailyGoal: Int?,
+    val dailyGoal: Int = 8,
     val totalDays: Int?,
     val chatLimit: Int?,
 ) {
@@ -38,7 +38,7 @@ data class UserInfo(
                 createdAt = timeProvider.nowDateTimeString(),
                 lastDrinkDate = null,
                 streakDays = null,
-                dailyGoal = null,
+                dailyGoal = 8,
                 totalDays = null,
                 chatLimit = null,
             )

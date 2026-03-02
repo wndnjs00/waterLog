@@ -6,5 +6,4 @@ data class WaterLogDto (
     var targetCups: Int? = 8,
     var totalMl: Int? = null,
     var updatedAt: String? = null,
-    val streak: Int? = 0
 )

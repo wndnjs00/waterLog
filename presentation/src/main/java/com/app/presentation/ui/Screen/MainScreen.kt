@@ -24,7 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,31 +31,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.app.domain.model.UserInfo
 import com.app.domain.model.WaterLog
 import com.app.presentation.R
-import com.app.presentation.ui.Screen.Main.CircularWaterProgress
 import com.app.presentation.ui.Screen.Main.MainNavigationContent
-import com.app.presentation.ui.Screen.Main.WaterControlSection
-import com.app.presentation.ui.Screen.Main.WeeklyChartScreen
 import com.app.presentation.ui.Screens
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
 import com.app.presentation.viewModel.WaterViewModel
-import com.kakao.sdk.user.UserApiClient
-import com.navercorp.nid.NidOAuth
-import com.navercorp.nid.core.data.errorcode.NidOAuthErrorCode
-import com.navercorp.nid.oauth.util.NidOAuthCallback
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 
 // 큰틀
 @RequiresApi(Build.VERSION_CODES.O)
@@ -139,25 +127,37 @@ fun MainBottomNavigationBar(navController: NavHostController) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavigationScreen(
-    viewModel: WaterViewModel = hiltViewModel(),
+    waterViewModel: WaterViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val todayLog by viewModel.todayLog.collectAsState()
+    val todayLog by waterViewModel.todayLog.collectAsState()
+    val userInfo by mainViewModel.userInfo.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.loadToday()
-        viewModel.loadWeekly()
-        viewModel.loadMonthly()
+        waterViewModel.loadToday()
+        waterViewModel.loadWeekly()
+        waterViewModel.loadMonthly()
     }
 
-    todayLog?.let { log ->
+    if(todayLog != null && userInfo != null) {
         MainNavigationContent(
-            log = log,
-            onAdd = { viewModel.addCup() },
-            onRemove = { viewModel.removeCup() },
+            log = todayLog!!,
+            streakDays = userInfo!!.streakDays ?: 0,
+            onAdd = { waterViewModel.addCup() },
+            onRemove = { waterViewModel.removeCup() },
             modifier = modifier
         )
     }
+
+//    todayLog?.let { log ->
+//        MainNavigationContent(
+//            log = log,
+//            onAdd = { waterViewModel.addCup() },
+//            onRemove = { waterViewModel.removeCup() },
+//            modifier = modifier
+//        )
+//    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -219,7 +219,6 @@ fun MainNavigationScreenProgressPreview() {
         targetCups = 8,
         totalMl = 1250,
         updatedAt = "2026/02/27 15:20:00",
-        streak = 6,
     )
 
     WaterLogTheme {
@@ -237,6 +236,7 @@ fun MainNavigationScreenProgressPreview() {
 
             MainNavigationContent(
                 log = fakeLog,
+                streakDays = 6,
                 onAdd = {},
                 onRemove = {},
                 modifier = Modifier
@@ -259,7 +259,6 @@ fun MainNavigationScreenGoalPreview() {
         targetCups = 8,
         totalMl = 2000,
         updatedAt = "2026/02/27 15:25:00",
-        streak = 10
     )
 
     WaterLogTheme {
@@ -277,6 +276,7 @@ fun MainNavigationScreenGoalPreview() {
 
             MainNavigationContent(
                 log = goalFakeLog,
+                streakDays = 10,
                 onAdd = {},
                 onRemove = {},
                 modifier = Modifier

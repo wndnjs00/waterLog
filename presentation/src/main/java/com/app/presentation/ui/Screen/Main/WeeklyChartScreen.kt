@@ -65,7 +65,8 @@ private fun WeeklyChartContent(
             startAxis = VerticalAxis.rememberStart(),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = CartesianValueFormatter { context, x, _ ->
-                    (context.model.extraStore[weekDaysKey] ?: emptyList()).getOrNull(x.toInt()) ?: ""
+                    (context.model.extraStore[weekDaysKey] ?: emptyList()).getOrNull(x.toInt())
+                        ?: ""
                 }
             ),
             decorations = listOfNotNull(goalLine),
