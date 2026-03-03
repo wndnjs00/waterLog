@@ -34,6 +34,7 @@ import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
@@ -41,6 +42,12 @@ import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import java.time.LocalDate
 
 private val weekLabelsKey = ExtraStore.Key<List<String>>()
+
+/** Y축 0~10 고정 (WeeklyChartContent와 동일). Composable 밖에 두어 draw 단계에서 Snapshot 읽기 방지. */
+private val fixedYRangeProvider = object : CartesianLayerRangeProvider {
+    override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double = 0.0
+    override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double = 10.0
+}
 
 @Composable
 private fun MonthlyChartContent(
@@ -72,6 +79,7 @@ private fun MonthlyChartContent(
                             )
                         )
                     ),
+                    rangeProvider = fixedYRangeProvider,
                 ),
                 startAxis = VerticalAxis.rememberStart(),
                 bottomAxis = HorizontalAxis.rememberBottom(

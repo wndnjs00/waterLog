@@ -149,15 +149,6 @@ fun MainNavigationScreen(
             modifier = modifier
         )
     }
-
-//    todayLog?.let { log ->
-//        MainNavigationContent(
-//            log = log,
-//            onAdd = { waterViewModel.addCup() },
-//            onRemove = { waterViewModel.removeCup() },
-//            modifier = modifier
-//        )
-//    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

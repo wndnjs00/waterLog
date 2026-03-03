@@ -28,6 +28,7 @@ import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.decoration.HorizontalLine
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
@@ -47,6 +48,7 @@ private fun WeeklyChartContent(
 ) {
     val goalLabel = goal?.let { "목표 $it 잔" } ?: ""
     val goalLineComponent = rememberLineComponent(Fill(MainBlue.toArgb()), 2.dp)
+
     val goalLine = if (goal != null) {
         HorizontalLine(
             y = { it[goalKey] },
@@ -55,18 +57,27 @@ private fun WeeklyChartContent(
         )
     } else null
 
+    // Y축 고정: 0, 6, 10 (12 초과 값도 막대는 10에서 잘림, 데이터는 그대로 표시)
+    val fixedRangeProvider = remember {
+        object : CartesianLayerRangeProvider {
+            override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double = 0.0
+            override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double = 10.0
+        }
+    }
+
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
                 columnProvider = ColumnCartesianLayer.ColumnProvider.series(
                     listOf(rememberLineComponent(Fill(MainBlue.toArgb()), 12.dp))
-                )
+                ),
+                rangeProvider = fixedRangeProvider,
             ),
             startAxis = VerticalAxis.rememberStart(),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = CartesianValueFormatter { context, x, _ ->
-                    (context.model.extraStore[weekDaysKey] ?: emptyList()).getOrNull(x.toInt())
-                        ?: ""
+                    (context.model.extraStore[weekDaysKey] ?: emptyList())
+                        .getOrNull(x.toInt()) ?: ""
                 }
             ),
             decorations = listOfNotNull(goalLine),
