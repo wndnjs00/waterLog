@@ -34,7 +34,7 @@ class WaterRepositoryImpl @Inject constructor(
         val logRef = userRef.collection("water_logs").document(waterLog.date)
 
         firestore.runTransaction { transaction ->
-
+            // Firestore 트랜잭션: 모든 읽기를 쓰기보다 먼저 수행
             val userSnap = transaction.get(userRef)
             val dailyGoal = userSnap.getLong("dailyGoal")?.toInt() ?: 8
             val currentStreak = userSnap.getLong("streakDays")?.toInt() ?: 0
@@ -49,6 +49,13 @@ class WaterRepositoryImpl @Inject constructor(
                 else -> 1
             }
 
+            // 배지 문서는 쓰기 전에 미리 읽어 둠
+            val day2lBadgeSnap = transaction.get(userRef.collection("badges").document(BadgeType.DAY_2L))
+            val week7BadgeSnap = transaction.get(userRef.collection("badges").document(BadgeType.WEEK_7DAYS))
+            val month30BadgeSnap = transaction.get(userRef.collection("badges").document(BadgeType.MONTH_30DAYS))
+            val king6mBadgeSnap = transaction.get(userRef.collection("badges").document(BadgeType.KING_6MONTHS))
+
+            // === 이하 쓰기만 수행 ===
             // water_log 저장
             transaction.set(logRef, WaterLogMapper.toDto(waterLog))
 
@@ -66,6 +73,7 @@ class WaterRepositoryImpl @Inject constructor(
                 createGoalNotification(transaction, userRef, dailyGoal)
                 createBadge(
                     transaction, userRef,
+                    day2lBadgeSnap.exists(),
                     BadgeType.DAY_2L,
                     "하루 2L 달성",
                     "하루에 8잔 달성!",
@@ -76,6 +84,7 @@ class WaterRepositoryImpl @Inject constructor(
             if (newStreak == 7)
                 createBadge(
                     transaction, userRef,
+                    week7BadgeSnap.exists(),
                     BadgeType.WEEK_7DAYS,
                     "7일 연속 달성",
                     "7일 동안 꾸준히 물을 마셨습니다!",
@@ -85,6 +94,7 @@ class WaterRepositoryImpl @Inject constructor(
             if (newStreak == 30)
                 createBadge(
                     transaction, userRef,
+                    month30BadgeSnap.exists(),
                     BadgeType.MONTH_30DAYS,
                     "30일 연속 달성",
                     "한달 동안 꾸준히 물을 마셨습니다!",
@@ -94,6 +104,7 @@ class WaterRepositoryImpl @Inject constructor(
             if (newStreak == 180)
                 createBadge(
                     transaction, userRef,
+                    king6mBadgeSnap.exists(),
                     BadgeType.KING_6MONTHS,
                     "6개월 꾸준함의 왕",
                     "6개월 동안 꾸준히 물을 섭취했습니다!",
@@ -103,27 +114,27 @@ class WaterRepositoryImpl @Inject constructor(
     }
 
 
+    // 배지가 없을 때만 쓰기
     private fun createBadge(
         transaction: Transaction,
         userRef: DocumentReference,
+        badgeAlreadyExists: Boolean,
         badgeId: String,
         name: String,
         description: String,
         date: String
     ) {
+        if (badgeAlreadyExists) return
+
         val badgeRef = userRef.collection("badges").document(badgeId)
-        val snapshot = transaction.get(badgeRef)
 
-        if (!snapshot.exists()) {
-            transaction.set(badgeRef, mapOf(
-                "name" to name,
-                "description" to description,
-                "acquired" to true,
-                "acquiredDate" to date
-            ))
-
-            transaction.update(userRef, "badges.$badgeId", true)
-        }
+        transaction.set(badgeRef, mapOf(
+            "name" to name,
+            "description" to description,
+            "acquired" to true,
+            "acquiredDate" to date
+        ))
+        transaction.update(userRef, "badges.$badgeId", true)
     }
 
     private fun createGoalNotification(
