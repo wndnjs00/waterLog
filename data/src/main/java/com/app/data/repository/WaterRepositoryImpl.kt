@@ -7,6 +7,7 @@ import com.app.domain.constants.BadgeType
 import com.app.domain.model.WaterLog
 import com.app.domain.repository.TimeProvider
 import com.app.domain.repository.WaterRepository
+import com.app.domain.usecase.StreakCalculator
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Transaction
@@ -41,7 +42,8 @@ class WaterRepositoryImpl @Inject constructor(
 
             val dailyGoal = userSnap.getLong("dailyGoal")?.toInt() ?: 8
             val currentStreak = userSnap.getLong("streakDays")?.toInt() ?: 0
-            val lastDate = userSnap.getString("lastDrinkDate")
+//            val lastDate = userSnap.getString("lastDrinkDate")
+            val lastGoalDate = userSnap.getString("lastGoalAchievedDate")
             val totalDays = userSnap.getLong("totalDays")?.toInt() ?: 0
 
             val goalAchievedDate = userSnap.getString("goalAchievedDate")
@@ -58,8 +60,8 @@ class WaterRepositoryImpl @Inject constructor(
             Log.d("DEBUG", "reachedGoalFirstTime = $reachedGoalFirstTime")
             Log.d("DEBUG", "---------------------------")
 
-            val newStreak = calculateStreak(
-                lastDate = lastDate,
+            val newStreak = StreakCalculator.calculate(
+                lastGoalDate = lastGoalDate,
                 today = waterLog.date,
                 yesterday = yesterday,
                 currentStreak = currentStreak,
@@ -84,6 +86,7 @@ class WaterRepositoryImpl @Inject constructor(
             // 목표 최초 달성시, 날짜기록
             if (reachedGoalFirstTime) {
                 updates["goalAchievedDate"] = waterLog.date
+                updates["lastGoalAchievedDate"] = waterLog.date
             }
 
             transaction.update(userRef, updates)
@@ -106,21 +109,20 @@ class WaterRepositoryImpl @Inject constructor(
 
 
     // streak 계산
-    private fun calculateStreak(
-        lastDate: String?,
-        today: String,
-        yesterday: String,
-        currentStreak: Int,
-        reachedGoalFirstTime: Boolean
-    ): Int {
-        if(!reachedGoalFirstTime) return currentStreak
-
-        return when {
-            lastDate == yesterday -> currentStreak + 1
-            lastDate == today -> currentStreak
-            else -> 1
-        }
-    }
+//    private fun calculateStreak(
+//        lastGoalDate: String?,
+//        today: String,
+//        yesterday: String,
+//        currentStreak: Int,
+//        reachedGoalFirstTime: Boolean
+//    ): Int {
+//        if(!reachedGoalFirstTime) return currentStreak
+//
+//        return when {
+//            lastGoalDate == yesterday -> currentStreak + 1
+//            else -> 1
+//        }
+//    }
 
     // 목표 달성 배지
     private fun createGoalBadge(

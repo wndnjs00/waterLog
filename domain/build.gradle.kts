@@ -46,4 +46,6 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    // 테스트
+    testImplementation(kotlin("test"))
 }

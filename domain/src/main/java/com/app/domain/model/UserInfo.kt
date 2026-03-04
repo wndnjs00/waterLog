@@ -10,6 +10,7 @@ data class UserInfo(
     val loginProvider: LoginProvider = LoginProvider.EMAIL,
     val createdAt: String, //회원가입 날짜
     val lastDrinkDate: String?, //마지막으로 물마신 날짜
+    val lastGoalAchievedDate: String?,
     val streakDays: Int?, //연속 섭취 일수
     val dailyGoal: Int = 8,
     val totalDays: Int?, //총 기록한 일수
@@ -37,6 +38,7 @@ data class UserInfo(
                 loginProvider = loginProvider,
                 createdAt = timeProvider.nowDateTimeString(),
                 lastDrinkDate = null,
+                lastGoalAchievedDate = null,
                 streakDays = null,
                 dailyGoal = 8,
                 totalDays = null,

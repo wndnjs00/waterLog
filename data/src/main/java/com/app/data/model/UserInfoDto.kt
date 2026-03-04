@@ -8,6 +8,7 @@ data class UserInfoDto (
     var loginProvider: String? = null,
     var createdAt: String? = null,
     var lastDrinkDate: String? = null,
+    var lastGoalAchievedDate: String? = null,
     var streakDays: Int? = null,
     var dailyGoal: Int? = null,
     var totalDays: Int? = null,
