@@ -3,12 +3,21 @@ package com.app.presentation.ui.Screen
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,14 +32,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
+import com.app.domain.model.UserInfo
 import androidx.credentials.CredentialManager
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +61,7 @@ import com.app.domain.model.WaterLog
 import com.app.presentation.R
 import com.app.presentation.ui.Screen.Main.MainNavigationContent
 import com.app.presentation.ui.Screens
+import com.app.presentation.ui.event.UiEvent
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
@@ -56,6 +78,17 @@ fun MainScreen(
 ) {
     val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is UiEvent.NavigateToLogin -> navController.navigate(Screens.Login.route) {
+                        popUpTo(Screens.Main.route) { inclusive = true }
+                    }
+            }
+        }
+    }
 
     LaunchedEffect(accountUserInfo) {
         accountUserInfo?.let {
@@ -131,17 +164,36 @@ fun MainNavigationScreen(
     mainViewModel: MainViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val todayLog by waterViewModel.todayLog.collectAsState()
     val userInfo by mainViewModel.userInfo.collectAsState()
 
-    if(todayLog != null && userInfo != null) {
-        MainNavigationContent(
-            log = todayLog!!,
-            streakDays = userInfo!!.streakDays ?: 0,
-            onAdd = { waterViewModel.addCup() },
-            onRemove = { waterViewModel.removeCup() },
-            modifier = modifier
-        )
+    // 소셜 로그인 시 userInfo가 나중에 로드되므로, userInfo가 준비되면 오늘 물로그 로드
+    LaunchedEffect(userInfo) {
+        if (userInfo != null) {
+            waterViewModel.loadToday()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        waterViewModel.event.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is UiEvent.NavigateToLogin -> {  }
+            }
+        }
+    }
+
+    todayLog?.let { log ->
+        userInfo?.let { user ->
+            MainNavigationContent(
+                log = log,
+                streakDays = user.streakDays ?: 0,
+                onAdd = { waterViewModel.addCup() },
+                onRemove = { waterViewModel.removeCup() },
+                modifier = modifier
+            )
+        }
     }
 }
 
@@ -150,6 +202,75 @@ fun MainNavigationScreen(
 fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
+    var showWithdrawConfirmDialog by remember { mutableStateOf(false) }
+
+    // 탈퇴 확인 다이얼로그
+    if (showWithdrawConfirmDialog) {
+        val dialogTextColor = Color.Black
+        val cancelBorderGray = Color(0xFFE0E0E0)
+
+        Dialog(onDismissRequest = { showWithdrawConfirmDialog = false }) {
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "정말 탈퇴하시겠습니까?",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = dialogTextColor
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            append("탈퇴시 계정과 저장된 사항이 모두 삭제되며,")
+                            append("\n")
+                            append("복구되지 않습니다. 계속 진행하시겠습니까?")
+                        },
+                        modifier = Modifier.padding(top = 12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = dialogTextColor
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showWithdrawConfirmDialog = false },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
+                            border = BorderStroke(1.dp, cancelBorderGray),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text("취소", style = MaterialTheme.typography.bodyLarge)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                showWithdrawConfirmDialog = false
+                                userInfo?.loginProvider?.let { provider ->
+                                    coroutineScope.launch {
+                                        viewModel.deleteAccount(provider)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                            border = BorderStroke(1.dp, Color.Red),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text("탈퇴하기", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     TopAppBar(
         title = { Text(stringResource(id = R.string.app_name)) },
@@ -187,6 +308,16 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
                     contentDescription = "로그아웃 아이콘"
                 )
             }
+
+            IconButton(onClick = {
+                showWithdrawConfirmDialog = true
+            }) {
+                Icon(
+                    painter = painterResource(id = android.R.drawable.ic_menu_set_as),
+                    contentDescription = "회원탈퇴 아이콘"
+                )
+            }
+
         }
     )
 }

@@ -1,7 +1,6 @@
 package com.app.presentation.ui.Screen.Auth
 
 import android.content.Context
-import android.util.Log
 import com.app.domain.model.UserInfo
 import com.app.presentation.viewModel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -28,13 +27,13 @@ fun naverLogin(
                     viewModel = viewModel,
                     onLoginSuccess = onLoginSuccess
                 )
-            }else {
-                Log.e("NAVER_LOGIN", "AccessToken is null")
+            } else {
+                viewModel.showOAuthError(Exception("AccessToken is null"))
             }
         }
 
         override fun onFailure(errorCode: String, errorDesc: String) {
-            Log.e("NAVER_LOGIN", "실패: $errorCode / $errorDesc")
+            viewModel.showOAuthError(Exception("$errorCode: $errorDesc"))
         }
 
     }
@@ -77,8 +76,8 @@ private fun loginWithFirebaseCustomTokenFromNaver(
                 onLoginSuccess()
             }
 
-        }catch (e:Exception) {
-            Log.e("NAVER_FIREBASE_LOGIN", "로그인 실패", e)
+        } catch (e: Exception) {
+            viewModel.showOAuthError(e)
         }
     }
 }

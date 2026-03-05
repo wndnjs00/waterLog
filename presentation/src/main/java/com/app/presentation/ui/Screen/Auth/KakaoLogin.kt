@@ -1,7 +1,6 @@
 package com.app.presentation.ui.Screen.Auth
 
 import android.content.Context
-import android.util.Log
 import com.app.domain.model.UserInfo
 import com.app.presentation.viewModel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -24,9 +23,8 @@ fun kakaoLogin(
     val kakaoCallback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
         when {
             error != null -> {
-                Log.e("kakao login", "카카오 계정 로그인 실패", error)
+                viewModel.showOAuthError(error)
             }
-
             token != null -> {
                 loginWithFirebaseCustomToken(
                     accessToken = token.accessToken,
@@ -42,12 +40,10 @@ fun kakaoLogin(
         UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
 
             if (error != null) {
-                Log.e("kakao login", "카카오톡 로그인 실패", error)
-            }
-
-            if (error is ClientError &&
-                error.reason == ClientErrorCause.Cancelled
-            ) {
+                if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                    return@loginWithKakaoTalk
+                }
+                viewModel.showOAuthError(error)
                 return@loginWithKakaoTalk
             }
 
@@ -101,7 +97,7 @@ private fun loginWithFirebaseCustomToken(
             }
 
         } catch (e: Exception) {
-            Log.e("FIREBASE_CUSTOM_LOGIN", "로그인 실패", e)
+            viewModel.showOAuthError(e)
         }
     }
 }

@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.TimeProvider
 import com.app.domain.usecase.AccountUseCase
+import com.app.presentation.ui.event.UiEvent
+import com.app.presentation.ui.util.AuthErrorMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,25 +30,62 @@ class MainViewModel @Inject constructor(
     private val _signInState = MutableStateFlow<EmailAuthState>(EmailAuthState.Idle)
     val signInState: StateFlow<EmailAuthState> = _signInState.asStateFlow()
 
+    private val _event = MutableSharedFlow<UiEvent>()
+    val event = _event.asSharedFlow()
+
     init {
         autoLogin()
     }
 
-    fun autoLogin(){
+    fun autoLogin() {
         viewModelScope.launch {
-            accountUseCase.loadUser()
+            try {
+                accountUseCase.loadUser()
+            } catch (e: Exception) {
+                _event.emit(UiEvent.ShowToast(AuthErrorMapper.map(e)))
+            }
+        }
+    }
+
+    /** OAuth(Google/Kakao/Naver) 로그인 실패 시 토스트 메시지 */
+    fun showOAuthError(throwable: Throwable) {
+        viewModelScope.launch {
+            _event.emit(UiEvent.ShowToast(AuthErrorMapper.mapForOAuth(throwable)))
         }
     }
 
     fun saveUser(userInfo: UserInfo) {
         viewModelScope.launch {
-            accountUseCase.saveUser(userInfo)
+            try {
+                accountUseCase.saveUser(userInfo)
+            } catch (e: Exception) {
+                _event.emit(UiEvent.ShowToast(AuthErrorMapper.map(e)))
+            }
         }
     }
 
     fun logout(loginProvider: UserInfo.LoginProvider) {
         viewModelScope.launch {
-            accountUseCase.logout(loginProvider)
+            try {
+                accountUseCase.logout(loginProvider)
+                _event.emit(UiEvent.ShowToast("로그아웃 되었습니다"))
+            } catch (e: Exception) {
+                _event.emit(UiEvent.ShowToast(AuthErrorMapper.map(e)))
+            }
+        }
+    }
+
+    // 회원 탈퇴 (이메일/OAuth 모두 적용, 성공 시 로그인 화면으로 이동)
+    fun deleteAccount(provider: UserInfo.LoginProvider, emailReauthPassword: String? = null) {
+        viewModelScope.launch {
+            accountUseCase.deleteAccount(provider, emailReauthPassword)
+                .fold(
+                    onSuccess = {
+                        _event.emit(UiEvent.ShowToast("회원탈퇴 완료"))
+                        _event.emit(UiEvent.NavigateToLogin)
+                    },
+                    onFailure = { _event.emit(UiEvent.ShowToast("회원탈퇴 실패")) }
+                )
         }
     }
 
@@ -57,8 +98,12 @@ class MainViewModel @Inject constructor(
             _signUpState.value = EmailAuthState.Loading
             val result = accountUseCase.signUpWithEmail(email, password, name)
             result.fold(
-                onSuccess = {_signUpState.value = EmailAuthState.Success},
-                onFailure = {_signUpState.value = EmailAuthState.Error(it.message ?: "회원가입 실패")},
+                onSuccess = { _signUpState.value = EmailAuthState.Success },
+                onFailure = {
+                    val msg = AuthErrorMapper.map(it)
+                    _signUpState.value = EmailAuthState.Error(msg)
+                    _event.emit(UiEvent.ShowToast(msg))
+                }
             )
         }
     }
@@ -71,8 +116,12 @@ class MainViewModel @Inject constructor(
             _signInState.value = EmailAuthState.Loading
             val result = accountUseCase.signInWithEmail(email, password)
             result.fold(
-                onSuccess = {_signInState.value = EmailAuthState.Success},
-                onFailure = { _signInState.value = EmailAuthState.Error(it.message ?: "로그인 실패")}
+                onSuccess = { _signInState.value = EmailAuthState.Success },
+                onFailure = {
+                    val msg = AuthErrorMapper.map(it)
+                    _signInState.value = EmailAuthState.Error(msg)
+                    _event.emit(UiEvent.ShowToast(msg))
+                }
             )
         }
     }

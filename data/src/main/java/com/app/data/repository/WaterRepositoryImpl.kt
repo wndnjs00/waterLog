@@ -4,7 +4,9 @@ import android.util.Log
 import com.app.data.mapper.WaterLogMapper
 import com.app.data.model.WaterLogDto
 import com.app.domain.constants.BadgeType
+import com.app.domain.exception.NetworkUnavailableException
 import com.app.domain.model.WaterLog
+import com.app.domain.repository.NetworkMonitor
 import com.app.domain.repository.TimeProvider
 import com.app.domain.repository.WaterRepository
 import com.app.domain.usecase.StreakCalculator
@@ -16,7 +18,8 @@ import javax.inject.Inject
 
 class WaterRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val networkMonitor: NetworkMonitor
 ) : WaterRepository {
     override suspend fun getTodayLog(uid: String, date: String): WaterLog? {
         val snapshot = firestore.collection("users")
@@ -34,6 +37,9 @@ class WaterRepositoryImpl @Inject constructor(
         uid: String,
         waterLog: WaterLog
     ): Result<Unit> {
+        if (!networkMonitor.isConnected()) {
+            return Result.failure(NetworkUnavailableException())
+        }
 
         return try {
             val userRef = firestore.collection("users").document(uid)
@@ -140,10 +146,10 @@ class WaterRepositoryImpl @Inject constructor(
     private fun handleStreakBadges(
         transaction: Transaction,
         userRef: DocumentReference,
-        newString: Int,
+        newStreak: Int,
         date: String
     ) {
-        when (newString) {
+        when (newStreak) {
             7 -> createBadge(
                 transaction,
                 userRef,

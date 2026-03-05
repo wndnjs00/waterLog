@@ -1,7 +1,6 @@
 package com.app.presentation.ui.Screen.Auth
 
 import android.app.Activity
-import android.util.Log
 import android.widget.Toast
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
@@ -49,8 +48,7 @@ suspend fun GoogleOnClick(
 
 
     } catch (e: Exception) {
-        Log.e("GoogleOnClick", "Google 로그인 취소 : ${e.localizedMessage}")
-        Toast.makeText(activity, "구글 로그인 중 취소되었습니다.", Toast.LENGTH_SHORT).show()
+        viewModel.showOAuthError(e)
     }
 }
 
@@ -94,17 +92,15 @@ private fun handleSignInCredential(
                                 onLoginSuccess(it.displayName ?: "") // MainScreen으로 이동
                             }
                         } else {
-                            // 로그인 실패
                             viewModel.logout(UserInfo.LoginProvider.GOOGLE)
-                            Toast.makeText(activity, "로그인 실패", Toast.LENGTH_SHORT).show()
-                            Log.e("로그인 실패", "로그인 실패: ${task.exception}")
+                            task.exception?.let { viewModel.showOAuthError(it) }
                         }
                     }
             } else {
-                Log.d("idToken null", "idToken is null")
+                viewModel.showOAuthError(Exception("idToken is null"))
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            viewModel.showOAuthError(e)
         }
     }
 }

@@ -6,11 +6,15 @@ import com.app.domain.model.WaterLog
 import com.app.domain.repository.TimeProvider
 import com.app.domain.usecase.AccountUseCase
 import com.app.domain.usecase.WaterUseCase
+import com.app.presentation.ui.event.UiEvent
+import com.app.presentation.ui.util.AuthErrorMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -34,6 +38,10 @@ class WaterViewModel @Inject constructor(
 
     private val _isUpdating = MutableStateFlow(false)
     val isUpdating: StateFlow<Boolean> = _isUpdating
+
+    private val _event = MutableSharedFlow<UiEvent>()
+    val event = _event.asSharedFlow()
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val weeklyLogs: StateFlow<List<WaterLog>> =
@@ -76,18 +84,22 @@ class WaterViewModel @Inject constructor(
 
     fun loadToday() {
         viewModelScope.launch {
-            val user = accountUseCase.getAccountInfo().value ?: return@launch
-            val date = timeProvider.nowDateString()
+            try {
+                val user = accountUseCase.getAccountInfo().value ?: return@launch
+                val date = timeProvider.nowDateString()
 
-            val log = waterUseCase.getToday(user.uid, date)
-                ?: WaterLog(
-                    date = date,
-                    cups = 0,
-                    targetCups = user.dailyGoal,
-                    totalMl = 0,
-                    updatedAt = timeProvider.nowDateTimeString(),
-                )
-            _todayLog.value = log
+                val log = waterUseCase.getToday(user.uid, date)
+                    ?: WaterLog(
+                        date = date,
+                        cups = 0,
+                        targetCups = user.dailyGoal,
+                        totalMl = 0,
+                        updatedAt = timeProvider.nowDateTimeString(),
+                    )
+                _todayLog.value = log
+            } catch (e: Exception) {
+                _event.emit(UiEvent.ShowToast(AuthErrorMapper.mapForWaterUpdate(e)))
+            }
         }
     }
 
@@ -129,9 +141,13 @@ class WaterViewModel @Inject constructor(
 
                     result.onSuccess {
                         _todayLog.value = newLog
-                    }.onFailure {
-                        // TODO: 실패시 (토스트 메세지 등 추가)
                     }
+
+                    result.onFailure {
+                        _event.emit(UiEvent.ShowToast(AuthErrorMapper.mapForWaterUpdate(it)))
+                    }
+                } catch (e: Exception) {
+                    _event.emit(UiEvent.ShowToast(AuthErrorMapper.mapForWaterUpdate(e)))
                 } finally {
                     // 무조건 실행
                     _isUpdating.value = false

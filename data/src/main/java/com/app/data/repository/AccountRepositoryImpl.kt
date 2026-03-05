@@ -7,6 +7,7 @@ import com.app.data.model.UserInfoDto
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.AccountRepository
 import com.app.domain.repository.TimeProvider
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.kakao.sdk.user.UserApiClient
@@ -14,8 +15,11 @@ import com.navercorp.nid.NidOAuth
 import com.navercorp.nid.oauth.util.NidOAuthCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class AccountRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
@@ -72,6 +76,70 @@ class AccountRepositoryImpl @Inject constructor(
         accountInfoFlow.emit(null)
 
     }
+
+    // 회원 탈퇴
+    override suspend fun deleteAccount(
+        provider: UserInfo.LoginProvider,
+        emailReauthPassword: String?
+    ): Result<Unit> {
+
+        return runCatching {
+            val user = auth.currentUser ?: throw Exception("user not logged in")
+            val uid = user.uid
+
+            when (provider) {
+                UserInfo.LoginProvider.KAKAO -> {
+                    suspendCancellableCoroutine { cont ->
+                        UserApiClient.instance.unlink { error ->
+                            if (error != null) {
+                                cont.resumeWithException(error)
+                            } else {
+                                cont.resume(Unit)
+                            }
+                        }
+                    }
+                }
+
+                UserInfo.LoginProvider.NAVER -> {
+                    suspendCancellableCoroutine { cont ->
+                        NidOAuth.disconnect(object : NidOAuthCallback {
+                            override fun onSuccess() {
+                                cont.resume(Unit)
+                            }
+                            override fun onFailure(errorCode: String, errorDesc: String) {
+                                cont.resumeWithException(Exception("네이버 회원탈퇴 실패: $errorCode - $errorDesc"))
+                            }
+                        })
+                    }
+                }
+
+                UserInfo.LoginProvider.GOOGLE -> {
+                    credentialManager.clearCredentialState(
+                        ClearCredentialStateRequest()
+                    )
+                }
+
+                UserInfo.LoginProvider.EMAIL -> {
+                    // 비밀번호가 있으면 재인증 후 탈퇴, 없으면 바로 탈퇴 시도 (최근 로그인 시 성공할 수 있음)
+                    emailReauthPassword?.let { password ->
+                        val email = user.email ?: throw Exception("이메일 정보가 없습니다")
+                        val credential = EmailAuthProvider.getCredential(email, password)
+                        user.reauthenticate(credential).await()
+                    }
+                }
+            }
+
+            firestore.collection("users")
+                .document(uid)
+                .delete()
+                .await()
+
+            user.delete().await()
+
+            accountInfoFlow.emit(null)
+        }
+    }
+
 
     override suspend fun signUpWithEmail(
         email: String,

@@ -35,10 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 import androidx.navigation.NavController
 import com.app.domain.model.UserInfo
 import com.app.presentation.R
 import com.app.presentation.ui.Screens
+import com.app.presentation.ui.event.UiEvent
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.viewModel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -59,6 +61,16 @@ fun LoginScreen(
     val activity = context as? Activity ?: return
     val coroutineScope = rememberCoroutineScope()
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
+
+    // 에러,안내 토스트 수신
+    LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is UiEvent.NavigateToLogin -> {  }
+            }
+        }
+    }
 
     // 로그인되어있는 사용자 확인
     LaunchedEffect(userInfo) {

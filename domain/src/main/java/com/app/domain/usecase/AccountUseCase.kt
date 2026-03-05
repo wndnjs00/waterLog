@@ -20,6 +20,13 @@ class AccountUseCase @Inject constructor(
         accountRepository.logout(loginProvider)
     }
 
+    suspend fun deleteAccount(
+        provider: UserInfo.LoginProvider,
+        emailReauthPassword: String? = null
+    ): Result<Unit> {
+        return accountRepository.deleteAccount(provider, emailReauthPassword)
+    }
+
     suspend fun signUpWithEmail(email: String, password: String, name: String): Result<UserInfo> {
         return accountRepository.signUpWithEmail(email, password, name)
     }
