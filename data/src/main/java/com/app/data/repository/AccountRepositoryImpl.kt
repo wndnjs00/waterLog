@@ -82,7 +82,6 @@ class AccountRepositoryImpl @Inject constructor(
         provider: UserInfo.LoginProvider,
         emailReauthPassword: String?
     ): Result<Unit> {
-
         return runCatching {
             val user = auth.currentUser ?: throw Exception("user not logged in")
             val uid = user.uid
@@ -120,12 +119,10 @@ class AccountRepositoryImpl @Inject constructor(
                 }
 
                 UserInfo.LoginProvider.EMAIL -> {
-                    // 비밀번호가 있으면 재인증 후 탈퇴, 없으면 바로 탈퇴 시도 (최근 로그인 시 성공할 수 있음)
-                    emailReauthPassword?.let { password ->
-                        val email = user.email ?: throw Exception("이메일 정보가 없습니다")
-                        val credential = EmailAuthProvider.getCredential(email, password)
-                        user.reauthenticate(credential).await()
-                    }
+                    val password = emailReauthPassword ?: throw Exception("이메일 회원탈퇴 시 비밀번호가 필요합니다")
+                    val email = user.email ?: throw Exception("이메일 정보가 없습니다")
+                    val credential = EmailAuthProvider.getCredential(email, password)
+                    user.reauthenticate(credential).await()
                 }
             }
 

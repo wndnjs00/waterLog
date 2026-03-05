@@ -11,7 +11,7 @@ interface AccountRepository {
     suspend fun logout(loginProvider: UserInfo.LoginProvider?)
 
     /**
-     * emailReauthPassword 이메일 로그인일 때만 사용. 재인증용 비밀번호(필수).
+     * emailReauthPassword: 이메일 로그인일 때만 사용 (재인증용 비밀번호).
      */
     suspend fun deleteAccount(
         loginProvider: UserInfo.LoginProvider,

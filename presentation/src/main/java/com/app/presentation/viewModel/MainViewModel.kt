@@ -76,6 +76,7 @@ class MainViewModel @Inject constructor(
     }
 
     // 회원 탈퇴 (이메일/OAuth 모두 적용, 성공 시 로그인 화면으로 이동)
+    // 이메일 로그인일 때만 emailReauthPassword 필수
     fun deleteAccount(provider: UserInfo.LoginProvider, emailReauthPassword: String? = null) {
         viewModelScope.launch {
             accountUseCase.deleteAccount(provider, emailReauthPassword)

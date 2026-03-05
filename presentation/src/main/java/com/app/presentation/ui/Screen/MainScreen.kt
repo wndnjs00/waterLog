@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
@@ -42,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -203,13 +207,22 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     var showWithdrawConfirmDialog by remember { mutableStateOf(false) }
+    var isEmailPasswordStep by remember { mutableStateOf(false) }
+    var emailDeletePassword by remember { mutableStateOf("") }
 
-    // 탈퇴 확인 다이얼로그
+    // 회원탈퇴 다이얼로그 (1단계: 확인 / 2단계: 이메일일때 비밀번호 입력)
     if (showWithdrawConfirmDialog) {
         val dialogTextColor = Color.Black
         val cancelBorderGray = Color(0xFFE0E0E0)
+        val provider = userInfo?.loginProvider
 
-        Dialog(onDismissRequest = { showWithdrawConfirmDialog = false }) {
+        Dialog(
+            onDismissRequest = {
+                showWithdrawConfirmDialog = false
+                isEmailPasswordStep = false
+                emailDeletePassword = ""
+            }
+        ) {
             Surface(
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface
@@ -220,21 +233,48 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
                         .padding(24.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    Text(
-                        text = "정말 탈퇴하시겠습니까?",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = dialogTextColor
-                    )
-                    Text(
-                        text = buildAnnotatedString {
-                            append("탈퇴시 계정과 저장된 사항이 모두 삭제되며,")
-                            append("\n")
-                            append("복구되지 않습니다. 계속 진행하시겠습니까?")
-                        },
-                        modifier = Modifier.padding(top = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = dialogTextColor
-                    )
+                    if (isEmailPasswordStep) {
+                        // 2단계: 이메일 비밀번호 입력
+                        Text(
+                            text = "정말 탈퇴하시겠습니까?",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = dialogTextColor
+                        )
+                        Text(
+                            text = "본인 확인을 위해 비밀번호를 입력해주세요.",
+                            modifier = Modifier.padding(top = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = dialogTextColor
+                        )
+                        OutlinedTextField(
+                            value = emailDeletePassword,
+                            onValueChange = { emailDeletePassword = it },
+                            label = { Text("비밀번호") },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp)
+                        )
+                    } else {
+                        // 1단계: 탈퇴 확인
+                        Text(
+                            text = "정말 탈퇴하시겠습니까?",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = dialogTextColor
+                        )
+                        Text(
+                            text = buildAnnotatedString {
+                                append("탈퇴시 계정과 저장된 사항이 모두 삭제되며,")
+                                append("\n")
+                                append("복구되지 않습니다. 계속 진행하시겠습니까?")
+                            },
+                            modifier = Modifier.padding(top = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = dialogTextColor
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -242,7 +282,14 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { showWithdrawConfirmDialog = false },
+                            onClick = {
+                                if (isEmailPasswordStep) {
+                                    isEmailPasswordStep = false
+                                    emailDeletePassword = ""
+                                } else {
+                                    showWithdrawConfirmDialog = false
+                                }
+                            },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
                             border = BorderStroke(1.dp, cancelBorderGray),
@@ -252,16 +299,34 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
                         }
                         OutlinedButton(
                             onClick = {
-                                showWithdrawConfirmDialog = false
-                                userInfo?.loginProvider?.let { provider ->
-                                    coroutineScope.launch {
-                                        viewModel.deleteAccount(provider)
+                                if (isEmailPasswordStep) {
+                                    provider?.let { p ->
+                                        coroutineScope.launch {
+                                            viewModel.deleteAccount(p, emailDeletePassword)
+                                            showWithdrawConfirmDialog = false
+                                            isEmailPasswordStep = false
+                                            emailDeletePassword = ""
+                                        }
+                                    }
+                                } else {
+                                    when (provider) {
+                                        UserInfo.LoginProvider.EMAIL -> {
+                                            isEmailPasswordStep = true
+                                        }
+                                        else -> {
+                                            showWithdrawConfirmDialog = false
+                                            provider?.let { p ->
+                                                coroutineScope.launch {
+                                                    viewModel.deleteAccount(p)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-                            border = BorderStroke(1.dp, Color.Red),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MainBlue),
+                            border = BorderStroke(1.dp, MainBlue),
                             shape = MaterialTheme.shapes.small
                         ) {
                             Text("탈퇴하기", style = MaterialTheme.typography.bodyLarge)
