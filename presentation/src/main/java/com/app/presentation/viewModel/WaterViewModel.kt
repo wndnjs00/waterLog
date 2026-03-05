@@ -7,9 +7,17 @@ import com.app.domain.repository.TimeProvider
 import com.app.domain.usecase.AccountUseCase
 import com.app.domain.usecase.WaterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,14 +27,52 @@ class WaterViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
+    private val mutex = Mutex()
+
     private val _todayLog = MutableStateFlow<WaterLog?>(null)
     val todayLog: StateFlow<WaterLog?> = _todayLog
 
-    private val _weeklyLogs = MutableStateFlow<List<WaterLog>>(emptyList())
-    val weeklyLogs: StateFlow<List<WaterLog>> = _weeklyLogs
+    private val _isUpdating = MutableStateFlow(false)
+    val isUpdating: StateFlow<Boolean> = _isUpdating
 
-    private val _monthlyLogs = MutableStateFlow<List<WaterLog>>(emptyList())
-    val monthlyLogs: StateFlow<List<WaterLog>> = _monthlyLogs
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val weeklyLogs: StateFlow<List<WaterLog>> =
+        _todayLog
+            .filterNotNull()
+            .flatMapLatest {
+                flow {
+                    val user = accountUseCase.getAccountInfo().value ?: return@flow
+                    val start = timeProvider.weekStart()
+                    val end = timeProvider.nowDateString()
+                    emit(waterUseCase.weekly(user.uid, start, end))
+                }
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                emptyList()
+            )
+
+    val monthlyLogs: StateFlow<List<WaterLog>> =
+        _todayLog
+            .filterNotNull()
+            .flatMapLatest {
+                flow {
+                    val user = accountUseCase.getAccountInfo().value ?: return@flow
+                    val start = timeProvider.monthStart()
+                    val end = timeProvider.nowDateString()
+                    emit(waterUseCase.monthly(user.uid, start, end))
+                }
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                emptyList()
+            )
+
+    init {
+        loadToday()
+    }
 
     fun loadToday() {
         viewModelScope.launch {
@@ -47,60 +93,50 @@ class WaterViewModel @Inject constructor(
 
     fun addCup() {
         val log = _todayLog.value ?: return
+        if (_isUpdating.value) return
 
-        updateLog(
-            log.copy(
-                cups = log.cups + 1,
-                totalMl = log.totalMl + 250,
-                updatedAt = timeProvider.nowDateTimeString()
-            )
+        val newLog = log.copy(
+            cups = log.cups + 1,
+            totalMl = log.totalMl + 250,
+            updatedAt = timeProvider.nowDateTimeString()
         )
+
+        updateLog(newLog)
     }
 
     fun removeCup() {
         val log = _todayLog.value ?: return
-        if (log.cups <= 0) return
+        if (_isUpdating.value || log.cups <= 0) return
 
-        updateLog(
-            log.copy(
-                cups = log.cups - 1,
-                totalMl = (log.totalMl - 250).coerceAtLeast(0),
-                updatedAt = timeProvider.nowDateTimeString()
-            )
+        val newLog = log.copy(
+            cups = log.cups - 1,
+            totalMl = (log.totalMl - 250).coerceAtLeast(0),
+            updatedAt = timeProvider.nowDateTimeString()
         )
+
+        updateLog(newLog)
     }
 
     private fun updateLog(newLog: WaterLog) {
         viewModelScope.launch {
-            val user = accountUseCase.getAccountInfo().value ?: return@launch
-            waterUseCase.saveWithAchievement(user.uid, newLog)
 
-            _todayLog.value = newLog
+            mutex.withLock {
+                val user = accountUseCase.getAccountInfo().value ?: return@launch
+                _isUpdating.value = true
 
-            // 그래프 갱신
-            // TODO: 추후에는 매번 로드하지 않고, 오늘기록 변경은 로컬에서만 로드하고 / 서버에서는 날짜가 바꼈을때만 1번 불러오도록 수정하기
-            loadWeekly()
-            loadMonthly()
-        }
-    }
+                try {
+                    val result = waterUseCase.saveWithAchievement(user.uid, newLog)
 
-    fun loadWeekly() {
-        viewModelScope.launch {
-            val user = accountUseCase.getAccountInfo().value ?: return@launch
-            val start = timeProvider.weekStart()
-            val end = timeProvider.nowDateString()
-
-            _weeklyLogs.value = waterUseCase.weekly(user.uid, start, end)
-        }
-    }
-
-    fun loadMonthly() {
-        viewModelScope.launch {
-            val user = accountUseCase.getAccountInfo().value ?: return@launch
-            val start = timeProvider.monthStart()
-            val end = timeProvider.nowDateString()
-
-            _monthlyLogs.value = waterUseCase.monthly(user.uid, start, end)
+                    result.onSuccess {
+                        _todayLog.value = newLog
+                    }.onFailure {
+                        // TODO: 실패시 (토스트 메세지 등 추가)
+                    }
+                } finally {
+                    // 무조건 실행
+                    _isUpdating.value = false
+                }
+            }
         }
     }
 }

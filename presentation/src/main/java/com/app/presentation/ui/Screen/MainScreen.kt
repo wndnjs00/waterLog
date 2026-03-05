@@ -134,12 +134,6 @@ fun MainNavigationScreen(
     val todayLog by waterViewModel.todayLog.collectAsState()
     val userInfo by mainViewModel.userInfo.collectAsState()
 
-    LaunchedEffect(Unit) {
-        waterViewModel.loadToday()
-        waterViewModel.loadWeekly()
-        waterViewModel.loadMonthly()
-    }
-
     if(todayLog != null && userInfo != null) {
         MainNavigationContent(
             log = todayLog!!,
