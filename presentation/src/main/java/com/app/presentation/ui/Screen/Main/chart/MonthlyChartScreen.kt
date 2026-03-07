@@ -1,4 +1,4 @@
-package com.app.presentation.ui.Screen.Main
+package com.app.presentation.ui.Screen.Main.chart
 
 import android.os.Build
 import androidx.annotation.RequiresApi
