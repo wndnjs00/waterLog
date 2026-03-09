@@ -10,6 +10,7 @@ import com.app.domain.repository.TimeProvider
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kakao.sdk.user.UserApiClient
 import com.navercorp.nid.NidOAuth
 import com.navercorp.nid.oauth.util.NidOAuthCallback
@@ -42,6 +43,7 @@ class AccountRepositoryImpl @Inject constructor(
             .document(userInfo.uid)
             .set(dto)
             .await()
+
         accountInfoFlow.emit(userInfo)
     }
 
@@ -194,5 +196,52 @@ class AccountRepositoryImpl @Inject constructor(
         accountInfoFlow.emit(domain)
 
         return domain
+    }
+
+    private suspend fun createWelcomeNotification(uid: String) {
+        val notificationsRef = firestore.collection("users")
+            .document(uid)
+            .collection("notifications")
+
+        val snapshot = notificationsRef
+            .whereEqualTo("type", "welcome")
+            .get()
+            .await()
+
+        if (snapshot.isEmpty) {
+            val userSnapshot = firestore.collection("users")
+                .document(uid)
+                .get()
+                .await()
+
+            val name = userSnapshot.getString("name") ?: "waterLog"
+
+            val notification = mapOf(
+                "title" to "환영합니다 ${name}님 🎉",
+                "message" to "WaterLog와 함께 건강한 수분습관을 시작해보세요!",
+                "type" to "welcome",
+                "createdAt" to timeProvider.nowDateTimeString(),
+                "isRead" to false
+            )
+
+            notificationsRef.document().set(notification).await()
+        }
+
+    }
+
+    override suspend fun saveFcmToken(token: String) {
+        val user = auth.currentUser ?: return
+
+        val userRef = firestore.collection("users")
+            .document(user.uid)
+
+        val snapshot = userRef.get().await()
+        val existingToken = snapshot.getString("fcmToken")
+
+        userRef.update("fcmToken", token).await()
+
+        if (existingToken == null) {
+            createWelcomeNotification(user.uid)
+        }
     }
 }

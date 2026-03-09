@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,7 +84,7 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // firebase 연결
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-analytics")
 
     // firebase auth (추가 안해도되는듯 - bom이 있어서)
@@ -111,4 +112,6 @@ dependencies {
     // Naver SDK
     implementation("com.navercorp.nid:oauth:5.11.2")
 
+    // Firebase messaging (BOM이 버전 관리)
+    implementation(libs.firebase.messaging.ktx)
 }

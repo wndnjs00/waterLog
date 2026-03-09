@@ -64,4 +64,7 @@ dependencies {
 
     // Naver SDK
     implementation("com.navercorp.nid:oauth:5.11.2")
+
+    // Firebase messaging
+    implementation("com.google.firebase:firebase-messaging:25.0.1")
 }

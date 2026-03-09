@@ -44,6 +44,8 @@ navigation-compose = { group = "androidx.navigation" , name = "navigation-compos
 # Hilt + Compose Navigation
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
+# BOM으로 버전 관리 (버전 미지정)
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

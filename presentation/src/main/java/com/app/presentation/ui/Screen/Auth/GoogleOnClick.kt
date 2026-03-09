@@ -14,6 +14,7 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 
 suspend fun GoogleOnClick(
     viewModel: MainViewModel,
@@ -84,6 +85,13 @@ private fun handleSignInCredential(
                                         timeProvider = timeProvider
                                     )
                                 )
+
+                                // FCM Token 저장
+                                FirebaseMessaging.getInstance().token
+                                    .addOnSuccessListener { token ->
+                                        viewModel.saveFcmToken(token)
+                                    }
+
                                 Toast.makeText(
                                     activity,
                                     "로그인유저: ${it.displayName}",

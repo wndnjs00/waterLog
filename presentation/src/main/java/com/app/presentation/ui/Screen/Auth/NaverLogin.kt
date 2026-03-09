@@ -5,6 +5,7 @@ import com.app.domain.model.UserInfo
 import com.app.presentation.viewModel.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.messaging.FirebaseMessaging
 import com.navercorp.nid.NidOAuth
 import com.navercorp.nid.oauth.util.NidOAuthCallback
 import kotlinx.coroutines.CoroutineScope
@@ -71,6 +72,12 @@ private fun loginWithFirebaseCustomTokenFromNaver(
                     timeProvider = viewModel.getTimeProvider(),
                 )
             )
+
+            // FCM Token 저장
+            FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    viewModel.saveFcmToken(token)
+                }
 
             launch(Dispatchers.Main){
                 onLoginSuccess()

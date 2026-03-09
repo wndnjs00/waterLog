@@ -10,7 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.credentials.CredentialManager
 import androidx.navigation.compose.rememberNavController
-import com.app.presentation.ui.Screen.MainScreen
+import com.google.firebase.messaging.FirebaseMessaging
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +23,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // FCM 토큰 가져오기
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                viewModel.saveFcmToken(token)
+            }
+
         enableEdgeToEdge()
         setContent {
             WaterLogTheme {

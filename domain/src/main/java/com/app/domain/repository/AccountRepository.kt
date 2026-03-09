@@ -27,4 +27,7 @@ interface AccountRepository {
     suspend fun signInWithEmail(email: String, password: String): Result<UserInfo>
     
     suspend fun loadUserFromFireStore(): UserInfo?
+
+    suspend fun saveFcmToken(token: String)
+
 }

@@ -7,6 +7,8 @@ import com.app.domain.repository.TimeProvider
 import com.app.domain.usecase.AccountUseCase
 import com.app.presentation.ui.event.UiEvent
 import com.app.presentation.ui.util.AuthErrorMapper
+import com.google.firebase.messaging.FirebaseMessaging
+import com.navercorp.nid.oauth.domain.vo.Token
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,6 +46,16 @@ class MainViewModel @Inject constructor(
                 accountUseCase.loadUser()
             } catch (e: Exception) {
                 _event.emit(UiEvent.ShowToast(AuthErrorMapper.map(e)))
+            }
+        }
+    }
+
+    fun saveFcmToken(token: String) {
+        viewModelScope.launch {
+            try {
+                accountUseCase.saveFcmToken(token)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -99,7 +112,17 @@ class MainViewModel @Inject constructor(
             _signUpState.value = EmailAuthState.Loading
             val result = accountUseCase.signUpWithEmail(email, password, name)
             result.fold(
-                onSuccess = { _signUpState.value = EmailAuthState.Success },
+                onSuccess = {
+
+                    try {
+                        val token = FirebaseMessaging.getInstance().token.await()
+                        accountUseCase.saveFcmToken(token)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    _signUpState.value = EmailAuthState.Success
+                },
                 onFailure = {
                     val msg = AuthErrorMapper.map(it)
                     _signUpState.value = EmailAuthState.Error(msg)

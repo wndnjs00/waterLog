@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,7 +68,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     // firebase 연결
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
 
     // firebase auth
@@ -90,4 +91,7 @@ dependencies {
 
     // Vico 차트 (Compose)
     implementation("com.patrykandpatrick.vico:compose:2.1.3")
+
+    // Firebase messaging (BOM이 버전 관리)
+    implementation(libs.firebase.messaging.ktx)
 }

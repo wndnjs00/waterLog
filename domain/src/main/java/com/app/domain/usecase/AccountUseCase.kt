@@ -3,6 +3,7 @@ package com.app.domain.usecase
 import com.app.domain.model.UserInfo
 import com.app.domain.repository.AccountRepository
 import kotlinx.coroutines.flow.StateFlow
+import java.time.Instant
 import javax.inject.Inject
 
 class AccountUseCase @Inject constructor(
@@ -38,4 +39,9 @@ class AccountUseCase @Inject constructor(
     suspend fun loadUser(): UserInfo? {
         return accountRepository.loadUserFromFireStore()
     }
+
+    suspend fun saveFcmToken(token:String) {
+        accountRepository.saveFcmToken(token)
+    }
+
 }

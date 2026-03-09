@@ -210,7 +210,7 @@ class WaterRepositoryImpl @Inject constructor(
 
         transaction.set(
             notificationRef, mapOf(
-                "title" to "오늘 물 목표 달성 💧",
+                "title" to "오늘 물섭취 목표 달성 💧",
                 "message" to "하루 목표 8잔을 모두 마셨어요!",
                 "type" to "goal_achieved",
                 "createdAt" to timeProvider.nowDateTimeString(),
