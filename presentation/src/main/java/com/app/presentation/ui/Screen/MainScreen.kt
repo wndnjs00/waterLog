@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +57,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.app.domain.model.UserInfo
 import androidx.credentials.CredentialManager
@@ -71,6 +74,7 @@ import com.app.presentation.ui.event.UiEvent
 import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.ui.theme.WaterLogTheme
 import com.app.presentation.viewModel.MainViewModel
+import com.app.presentation.viewModel.NotificationViewModel
 import com.app.presentation.viewModel.WaterViewModel
 import kotlinx.coroutines.launch
 
@@ -205,9 +209,16 @@ fun MainNavigationScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
+fun TopAppBars(
+    viewModel: MainViewModel,
+    navController: NavHostController,
+    notificationViewModel: NotificationViewModel = hiltViewModel()
+) {
     val coroutineScope = rememberCoroutineScope()
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
+    val notifications by notificationViewModel.notifications.collectAsState()
+    val unreadCount = notifications.count { !it.isRead }
+
     var showWithdrawConfirmDialog by remember { mutableStateOf(false) }
     var isEmailPasswordStep by remember { mutableStateOf(false) }
     var emailDeletePassword by remember { mutableStateOf("") }
@@ -381,10 +392,26 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
             IconButton(onClick = {
                 navController.navigate(Screens.Notification.route)
             }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.alert),
-                    contentDescription = "알람 아이콘"
-                )
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge(
+                                containerColor = Color.Red
+                            ) {
+                                Text(
+                                    text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.alert),
+                        contentDescription = "알람 아이콘"
+                    )
+                }
             }
 
             IconButton(onClick = {
