@@ -1,6 +1,5 @@
 package com.app.data.repository
 
-import android.util.Log
 import com.app.data.mapper.WaterLogMapper
 import com.app.data.model.WaterLogDto
 import com.app.domain.constants.BadgeType
@@ -61,14 +60,6 @@ class WaterRepositoryImpl @Inject constructor(
 
                 val reachedGoalFirstTime =
                     waterLog.cups >= dailyGoal && goalAchievedDate != waterLog.date
-
-                Log.d("DEBUG", "---------------------------")
-                Log.d("DEBUG", "waterLog.date = ${waterLog.date}")
-                Log.d("DEBUG", "goalAchievedDate = $goalAchievedDate")
-                Log.d("DEBUG", "dailyGoal = $dailyGoal")
-                Log.d("DEBUG", "cups = ${waterLog.cups}")
-                Log.d("DEBUG", "reachedGoalFirstTime = $reachedGoalFirstTime")
-                Log.d("DEBUG", "---------------------------")
 
                 val newStreak = StreakCalculator.calculate(
                     lastGoalDate = lastGoalDate,

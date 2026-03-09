@@ -2,7 +2,6 @@ package com.app.data.mapper
 
 import com.app.data.model.WaterLogDto
 import com.app.domain.model.WaterLog
-import kotlinx.serialization.json.internal.decodeByReader
 
 object WaterLogMapper {
     fun toDomain(dto: WaterLogDto) : WaterLog {

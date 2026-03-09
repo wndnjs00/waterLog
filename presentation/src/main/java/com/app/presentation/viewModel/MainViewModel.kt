@@ -8,7 +8,6 @@ import com.app.domain.usecase.AccountUseCase
 import com.app.presentation.ui.event.UiEvent
 import com.app.presentation.ui.util.AuthErrorMapper
 import com.google.firebase.messaging.FirebaseMessaging
-import com.navercorp.nid.oauth.domain.vo.Token
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
