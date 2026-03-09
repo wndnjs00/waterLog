@@ -378,7 +378,9 @@ fun TopAppBars(viewModel: MainViewModel, navController: NavHostController) {
                     contentDescription = "뱃지 아이콘"
                 )
             }
-            IconButton(onClick = {}) {
+            IconButton(onClick = {
+                navController.navigate(Screens.Notification.route)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.alert),
                     contentDescription = "알람 아이콘"

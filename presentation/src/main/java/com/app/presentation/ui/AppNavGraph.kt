@@ -2,6 +2,8 @@
 
 package com.app.presentation.ui
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
@@ -16,8 +18,10 @@ import com.app.presentation.ui.Screen.Auth.SignInScreen
 import com.app.presentation.ui.Screen.Auth.SignUpScreen
 import com.app.presentation.ui.Screen.Auth.kakaoLogin
 import com.app.presentation.ui.Screen.Auth.naverLogin
+import com.app.presentation.ui.Screen.Notification.NotificationScreen
 import com.app.presentation.viewModel.MainViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
@@ -105,6 +109,12 @@ fun AppNavGraph(
                 navController = navController
             )
         }
+
+        composable(Screens.Notification.route) {
+            NotificationScreen(
+                navController = navController
+            )
+        }
     }
 }
 
@@ -113,5 +123,6 @@ sealed class Screens(val route: String) {
     object SignUp : Screens("signup")
     object SignIn : Screens("signin")
     object Main : Screens("main")
+    object Notification: Screens("notification")
 }
 

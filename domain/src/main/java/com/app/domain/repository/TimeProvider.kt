@@ -6,4 +6,5 @@ interface TimeProvider {
     fun yesterdayString(): String
     fun weekStart(): String
     fun monthStart(): String
+    fun formatNotificationTime(dateTime: String): Result<String>
 }

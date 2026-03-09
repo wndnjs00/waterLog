@@ -2,8 +2,10 @@ package com.app.data.repository
 
 import com.app.domain.repository.TimeProvider
 import org.threeten.bp.DayOfWeek
+import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
+import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -11,6 +13,7 @@ import javax.inject.Inject
 class TimeProviderImpl @Inject constructor() : TimeProvider {
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     override fun nowDateTimeString(): String {
         return LocalDateTime.now().format(dateTimeFormatter)
@@ -36,5 +39,17 @@ class TimeProviderImpl @Inject constructor() : TimeProvider {
         val firstDay = LocalDate.now()
             .withDayOfMonth(1)
         return firstDay.format(dateFormatter)
+    }
+
+    override fun formatNotificationTime(dateTime: String): Result<String> {
+        return try {
+            val time = Instant.parse(dateTime)
+                .atZone(ZoneId.systemDefault())
+                .toOffsetDateTime()
+
+            Result.success(time.format(timeFormatter))
+        } catch (e: Exception){
+            Result.failure(e)
+        }
     }
 }
