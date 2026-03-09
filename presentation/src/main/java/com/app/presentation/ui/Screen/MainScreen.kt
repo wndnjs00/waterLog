@@ -5,8 +5,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +20,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,16 +38,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,7 +51,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.app.domain.model.UserInfo
 import androidx.credentials.CredentialManager
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -385,7 +377,7 @@ fun TopAppBars(
         actions = {
             IconButton(onClick = { showBadgeInfoDialog = true }) {
                 Icon(
-                    imageVector = Icons.Filled.CheckCircle,
+                    painter = painterResource(id = R.drawable.badge_img),
                     contentDescription = "뱃지 아이콘"
                 )
             }
@@ -408,7 +400,7 @@ fun TopAppBars(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.alert),
+                        painter = painterResource(id = R.drawable.bell_img),
                         contentDescription = "알람 아이콘"
                     )
                 }
@@ -424,7 +416,7 @@ fun TopAppBars(
                     }
             }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.logout),
+                    painter = painterResource(id = R.drawable.logout_img),
                     contentDescription = "로그아웃 아이콘"
                 )
             }
@@ -433,7 +425,7 @@ fun TopAppBars(
                 showWithdrawConfirmDialog = true
             }) {
                 Icon(
-                    painter = painterResource(id = android.R.drawable.ic_menu_set_as),
+                    painter = painterResource(id = R.drawable.signout_img),
                     contentDescription = "회원탈퇴 아이콘"
                 )
             }
