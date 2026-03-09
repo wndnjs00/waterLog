@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+presentation/src/main/res/values/api_key.xml
+app/google-services.jsonapp/google-services.json
+presentation/src/main/res/values/api_key.xml
