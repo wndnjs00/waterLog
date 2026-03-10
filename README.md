@@ -1,0 +1,67 @@
+# 💧 WaterLog
+하루 물 섭취량을 기록하고, 나의 수분 섭취 패턴을 확인하기 위한 목적으로 개발했습니다.<br/>
+물 마시는 습관을 기르고, 주간 / 월간 통계를 통해 건강한 수분 섭취 습관을 만들 수 있도록 제작했습니다.
+## 개발 기간
+2025.10.25 ~ 2025.10.27 / <br/>
+2026.02.17 ~ 2026.03.10
+<br/><br/>
+## ⚒️기술스택
+|분류|
+|:---:|
+`Kotlin` `Jetpack Compose` `Multi-Module` `MVVM` `Clean Architecture` `Hilt` `Flow` `Vico Chart` `Firebase Auth/Firestore` `Firebase Functions` `Firebase Messaging(FCM)`
+
+<br/><br/>
+## 이런 분들을 위해 만들었어요
+- 건강한 수분섭취습관을 만들고 싶은 분
+- 나의 물 섭취 패턴을 데이터로 확인하고 싶은 분
+- 목표 물 섭취량을 정하고, 꾸준히 관리하고 싶은 분
+- 수분습관을 게임처럼 관리하고 싶은 분 (뱃지기능 2차 도입예정)
+
+<br/><br/>
+## 💻 주요기능
+## 회원가입/로그인
+- Kakao, Naver, Google 소셜 로그인 기능을 제공합니다
+- 이메일/비밀번호 회원가입,로그인
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/4918c6f0-32f2-4206-9c98-842fede5849b" width="180" height="400" />
+</p>
+
+## 물 섭취 기록
+- +,- 버튼을 눌러 물섭취량을 간편하게 기록할 수 있어요
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/594e6a56-dc2a-4294-bba6-6395a148e8e0" width="180" height="400" />
+</p>
+
+## 주간 / 월간 수분 섭취 통계
+- 최근 7일 물섭취량 / 월간 평균 섭취량을 그래프로 확인할 수 있어요
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/51cae54e-2ba5-4d49-8725-311b13d57737" width="180" height="400" />
+  <img src="https://github.com/user-attachments/assets/e3da403c-31a3-4915-a60e-bd42be659f1c" width="180" height="400" />
+</p>
+
+## 알림 기능
+- 아래 3가지 상황에 푸시알림이 와요
+- 읽은 알림은 회색으로 표시돼요
+1. 처음 회원가입해서 들어왔을때
+2. 오늘 물섭취량(8잔) 달성했을때
+3. 앱에 안들어왔을때
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/a8d75f9b-72b2-4cdd-ab54-8ff2f5d152df" width="180" height="400" />
+</p>
+
+
+<br/><br/>
+## 1차 개발 완료 기능
+- 소셜 로그인, 이메일 로그인
+- 물 섭취 기록 기능
+- 주간 수분 섭취량, 월간 평균 섭취량 그래프 기능
+- 알림 기능
+- 로그아웃,회원탈퇴 기능
+
+<br/><br/>
+## 2차 개발 도입예정 기능
+(데이터는 확장성있게 구현 완료)
+- AI 물섭취 질문기능 (AI 도우미)
+- 뱃지 기능 (목표 달성률 기반 뱃지부여)
+- Wear OS 연동
+- AOS, IOS 배포예정
