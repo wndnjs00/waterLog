@@ -114,4 +114,7 @@ dependencies {
 
     // Firebase messaging (BOM이 버전 관리)
     implementation(libs.firebase.messaging.ktx)
+
+    // splashscreen
+    implementation(libs.androidx.core.splashscreen)
 }

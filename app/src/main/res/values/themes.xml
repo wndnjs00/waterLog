@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.WaterLog" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- SplashScreen 라이브러리를 사용하는 앱 테마 -->
+    <style name="Theme.WaterLog" parent="Theme.SplashScreen">
+        <!-- 스플래시 배경색 -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <!-- 스플래시에 표시할 로고 -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/waterlog_logo2</item>
+        <!-- 스플래시 후에 사용할 실제 앱 테마 -->
+        <item name="postSplashScreenTheme">@style/Theme.WaterLog.PostSplash</item>
+    </style>
+
+    <!-- 실제 앱 UI 에 사용하는 테마 -->
+    <style name="Theme.WaterLog.PostSplash" parent="android:Theme.Material.Light.NoActionBar"/>
+
 </resources>
