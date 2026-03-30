@@ -16,6 +16,7 @@ import com.app.presentation.ui.Screen.Auth.SignInScreen
 import com.app.presentation.ui.Screen.Auth.SignUpScreen
 import com.app.presentation.ui.Screen.Auth.kakaoLogin
 import com.app.presentation.ui.Screen.Auth.naverLogin
+import com.app.presentation.ui.Screen.Main.Badge.BadgeScreen
 import com.app.presentation.ui.Screen.Notification.NotificationScreen
 import com.app.presentation.viewModel.MainViewModel
 
@@ -113,6 +114,12 @@ fun AppNavGraph(
                 navController = navController
             )
         }
+
+        composable(Screens.Badge.route) {
+            BadgeScreen(
+                navController = navController
+            )
+        }
     }
 }
 
@@ -122,5 +129,6 @@ sealed class Screens(val route: String) {
     object SignIn : Screens("signin")
     object Main : Screens("main")
     object Notification: Screens("notification")
+    object Badge: Screens("badge")
 }
 

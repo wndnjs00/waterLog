@@ -58,6 +58,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.domain.model.WaterLog
 import com.app.presentation.R
+import com.app.presentation.ui.Screen.Main.Badge.BadgeDialog
 import com.app.presentation.ui.Screen.Main.MainNavigationContent
 import com.app.presentation.ui.Screens
 import com.app.presentation.ui.components.WaterLogBaseDialog
@@ -80,6 +81,9 @@ fun MainScreen(
     val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    var showBadgeDialog by remember { mutableStateOf(false) }
+    var badgeKey by remember { mutableStateOf("") }
+
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
             when (event) {
@@ -87,8 +91,19 @@ fun MainScreen(
                 is UiEvent.NavigateToLogin -> navController.navigate(Screens.Login.route) {
                         popUpTo(Screens.Main.route) { inclusive = true }
                     }
+                is UiEvent.ShowBadgeDialog -> {
+                    badgeKey = event.badgeKey
+                    showBadgeDialog = true
+                }
             }
         }
+    }
+
+    if (showBadgeDialog) {
+        BadgeDialog(
+            badgeKey = badgeKey,
+            onDismiss = { showBadgeDialog = false}
+        )
     }
 
     LaunchedEffect(accountUserInfo) {
@@ -181,6 +196,7 @@ fun MainNavigationScreen(
             when (event) {
                 is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 is UiEvent.NavigateToLogin -> {  }
+                is UiEvent.ShowBadgeDialog -> { }
             }
         }
     }
@@ -213,157 +229,6 @@ fun TopAppBars(
     var showWithdrawConfirmDialog by remember { mutableStateOf(false) }
     var isEmailPasswordStep by remember { mutableStateOf(false) }
     var emailDeletePassword by remember { mutableStateOf("") }
-    var showBadgeInfoDialog by remember { mutableStateOf(false) }
-
-    // 회원탈퇴 다이얼로그 (1단계: 확인 / 2단계: 이메일일때 비밀번호 입력)
-    if (showWithdrawConfirmDialog) {
-        val dialogTextColor = Color.Black
-        val cancelBorderGray = Color(0xFFE0E0E0)
-        val provider = userInfo?.loginProvider
-
-        WaterLogBaseDialog(
-            onDismissRequest = {
-                showWithdrawConfirmDialog = false
-                isEmailPasswordStep = false
-                emailDeletePassword = ""
-            }
-        ) {
-            if (isEmailPasswordStep) {
-                // 2단계: 이메일 비밀번호 입력
-                Text(
-                    text = "정말 탈퇴하시겠습니까?",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = dialogTextColor
-                )
-                Text(
-                    text = "본인 확인을 위해 비밀번호를 입력해주세요.",
-                    modifier = Modifier.padding(top = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = dialogTextColor
-                )
-                OutlinedTextField(
-                    value = emailDeletePassword,
-                    onValueChange = { emailDeletePassword = it },
-                    label = { Text("비밀번호") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                )
-            } else {
-                // 1단계: 탈퇴 확인
-                Text(
-                    text = "정말 탈퇴하시겠습니까?",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = dialogTextColor
-                )
-                Text(
-                    text = buildAnnotatedString {
-                        append("탈퇴시 계정과 저장된 사항이 모두 삭제되며,")
-                        append("\n")
-                        append("복구되지 않습니다. 계속 진행하시겠습니까?")
-                    },
-                    modifier = Modifier.padding(top = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = dialogTextColor
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        if (isEmailPasswordStep) {
-                            isEmailPasswordStep = false
-                            emailDeletePassword = ""
-                        } else {
-                            showWithdrawConfirmDialog = false
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
-                    border = BorderStroke(1.dp, cancelBorderGray),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text("취소", style = MaterialTheme.typography.bodyLarge)
-                }
-                OutlinedButton(
-                    onClick = {
-                        if (isEmailPasswordStep) {
-                            provider?.let { p ->
-                                coroutineScope.launch {
-                                    viewModel.deleteAccount(p, emailDeletePassword)
-                                    showWithdrawConfirmDialog = false
-                                    isEmailPasswordStep = false
-                                    emailDeletePassword = ""
-                                }
-                            }
-                        } else {
-                            when (provider) {
-                                UserInfo.LoginProvider.EMAIL -> {
-                                    isEmailPasswordStep = true
-                                }
-                                else -> {
-                                    showWithdrawConfirmDialog = false
-                                    provider?.let { p ->
-                                        coroutineScope.launch {
-                                            viewModel.deleteAccount(p)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MainBlue),
-                    border = BorderStroke(1.dp, MainBlue),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text("탈퇴하기", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
-    }
-
-    // 뱃지 안내 다이얼로그
-    if (showBadgeInfoDialog) {
-        WaterLogBaseDialog(
-            onDismissRequest = { showBadgeInfoDialog = false }
-        ) {
-            Text(
-                text = "뱃지 기능 개발중입니다.",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color.Black
-            )
-            Text(
-                text = "조금만 기다려주세요!",
-                modifier = Modifier.padding(top = 12.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showBadgeInfoDialog = false },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MainBlue),
-                    border = BorderStroke(1.dp, MainBlue),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text("확인", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
-    }
 
     TopAppBar(
         title = { Text(stringResource(id = R.string.app_name)) },
@@ -374,7 +239,9 @@ fun TopAppBars(
             navigationIconContentColor = Color.White
         ),
         actions = {
-            IconButton(onClick = { showBadgeInfoDialog = true }) {
+            IconButton(onClick = {
+                navController.navigate(Screens.Badge.route)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.badge_img),
                     contentDescription = "뱃지 아이콘"

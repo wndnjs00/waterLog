@@ -66,6 +66,7 @@ fun LoginScreen(
             when (event) {
                 is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 is UiEvent.NavigateToLogin -> {  }
+                is UiEvent.ShowBadgeDialog -> { }
             }
         }
     }

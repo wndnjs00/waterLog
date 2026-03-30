@@ -65,3 +65,19 @@
 - 뱃지 기능 (목표 달성률 기반 뱃지부여)
 - Wear OS 연동
 - AOS, IOS 배포예정
+
+
+---
+
+### 서비스 구조 도식화
+
+<img src="https://github.com/user-attachments/assets/2a4703b2-f93d-4256-ac2b-a7a0a1806e74" />
+
+---
+
+### 구조설계하며 고민했던 사항들
+
+[Multi Module 단위 구조 설계](https://blush-zephyr-e3e.notion.site/Multi-Module-3335dca21215807c99fad6258976d43f?pvs=143)
+
+[Clean Architecture + MVVM 패턴을 채택한 이유](https://blush-zephyr-e3e.notion.site/Clean-Architecture-MVVM-3335dca212158043b45ac61580bed575?pvs=143)
+
