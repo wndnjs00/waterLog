@@ -1,6 +1,5 @@
 package com.app.presentation.ui.Screen.Main.Badge
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,14 +10,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,9 +43,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.app.presentation.R
 import com.app.presentation.ui.event.UiEvent
+import com.app.presentation.ui.theme.MainBlue
 import com.app.presentation.viewModel.BadgeViewModel
 import com.patrykandpatrick.vico.compose.common.component.shadow
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BadgeScreen(
     navController: NavHostController,
@@ -55,20 +63,6 @@ fun BadgeScreen(
         "king_6months"
     )
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        items(badgeList) { key ->
-            val badge = badges[key]
-
-            BadgeItem(
-                isAchieved = badge != null,
-                title = badge?.name ?: "🔒잠김"
-            )
-        }
-    }
-
     // 이벤트 수신
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
@@ -78,14 +72,48 @@ fun BadgeScreen(
         }
     }
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("물뱃지") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "뒤로가기 아이콘",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MainBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                )
+            )
+        }
+    ) { innerPadding ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            items(badgeList) { key ->
+                val badge = badges[key]
+
+                BadgeItem(
+                    isAchieved = badge != null,
+                    title = badge?.name ?: "🔒잠김"
+                )
+            }
+        }
+    }
 
     // 다이얼로그 표시
     dialogBadgeKey?.let { key ->
-        val badgeName = badges[key]?.name ?: ""
-
         BadgeEarnedDialog(
             badgeKey = key,
-            badgeName = badgeName,
+            badgeName = badges[key]?.name ?: "",
             onDismiss = { dialogBadgeKey = null }
         )
     }
@@ -100,10 +128,9 @@ fun BadgeItem(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),
-//            .aspectRatio(1f),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = Color.White // ✅ 핵심: 배경 흰색
+            containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {

@@ -32,11 +32,11 @@ class BadgeViewModel @Inject constructor(
         observeBadge()
     }
 
-    private fun observeBadge(){
+    private fun observeBadge() {
         viewModelScope.launch {
             val user = accountUseCase.getAccountInfo().value ?: return@launch
 
-            badgeUseCase(user.uid).collect { map ->
+            badgeUseCase.observe(user.uid).collect { map ->
                 _badges.value = map
 
                 map.keys.forEach { key ->

@@ -6,5 +6,5 @@ import javax.inject.Inject
 class BadgeUseCase @Inject constructor(
     private val repository: BadgeRepository
 ){
-    operator fun invoke(uid: String) = repository.observeBadges(uid)
+    fun observe(uid: String) = repository.observeBadges(uid)
 }
