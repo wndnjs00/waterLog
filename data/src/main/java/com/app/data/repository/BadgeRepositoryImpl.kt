@@ -1,5 +1,6 @@
 package com.app.data.repository
 
+import com.app.data.model.BadgeDto
 import com.app.domain.model.Badge
 import com.app.domain.repository.BadgeRepository
 import com.google.firebase.firestore.DocumentChange
@@ -26,7 +27,9 @@ class BadgeRepositoryImpl @Inject constructor(
 
                 if (isFirstSnapshot) {
                     snapshot.documents.forEach { doc ->
-                        val badge = doc.toObject(Badge::class.java)
+                        val dto = doc.toObject(BadgeDto::class.java)
+                        val badge = dto?.toDomain()
+
                         if (badge != null) {
                             cacheMap[doc.id] = badge
                         }
@@ -37,13 +40,16 @@ class BadgeRepositoryImpl @Inject constructor(
                 }
 
                 for (change in snapshot.documentChanges) {
-                    val badge = change.document.toObject(Badge::class.java)
+                    val dto = change.document.toObject(BadgeDto::class.java)
+                    val badge = dto.toDomain()
                     val key = change.document.id
 
-                    when (change.type) {
-                        DocumentChange.Type.ADDED,
-                        DocumentChange.Type.MODIFIED -> cacheMap[key] = badge
-                        DocumentChange.Type.REMOVED -> cacheMap.remove(key)
+                    if (badge != null) {
+                        when (change.type) {
+                            DocumentChange.Type.ADDED,
+                            DocumentChange.Type.MODIFIED -> cacheMap[key] = badge
+                            DocumentChange.Type.REMOVED -> cacheMap.remove(key)
+                        }
                     }
                 }
                 trySend(cacheMap.toMap())
