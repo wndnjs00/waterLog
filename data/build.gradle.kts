@@ -48,6 +48,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
+    // Datatore
+    implementation(libs.androidx.datastore.preferences)
+
     // firebase 연결
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-analytics")

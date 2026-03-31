@@ -3,6 +3,7 @@ package com.app.presentation.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.domain.model.Badge
+import com.app.domain.repository.BadgeShownStore
 import com.app.domain.usecase.AccountUseCase
 import com.app.domain.usecase.BadgeUseCase
 import com.app.presentation.ui.event.UiEvent
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,6 +20,7 @@ import javax.inject.Inject
 class BadgeViewModel @Inject constructor(
     private val badgeUseCase: BadgeUseCase,
     private val accountUseCase: AccountUseCase,
+    private val badgeShownStore: BadgeShownStore,
 ): ViewModel() {
 
     private val _badges = MutableStateFlow<Map<String, Badge>>(emptyMap())
@@ -25,8 +28,6 @@ class BadgeViewModel @Inject constructor(
 
     private val _event = MutableSharedFlow<UiEvent>()
     val event = _event.asSharedFlow()
-
-    private var shownBadges = mutableSetOf<String>()
 
     init {
         observeBadge()
@@ -39,10 +40,13 @@ class BadgeViewModel @Inject constructor(
             badgeUseCase.observe(user.uid).collect { map ->
                 _badges.value = map
 
+                val shownSet = badgeShownStore.shownBadges.first()
+
                 map.keys.forEach { key ->
-                    if (!shownBadges.contains(key)) {
-                        shownBadges.add(key)
+                    if (!shownSet.contains(key)) {
+                        // 신규뱃지 -> 다이얼로그
                         _event.emit(UiEvent.ShowBadgeDialog(key))
+                        badgeShownStore.saveBadge(key)
                     }
                 }
             }

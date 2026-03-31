@@ -14,6 +14,7 @@ class BadgeRepositoryImpl @Inject constructor(
 
     override fun observeBadges(uid: String) = callbackFlow {
         val cacheMap = mutableMapOf<String, Badge>()
+        var isFirstSnapshot = true
 
         val listener = firestore
             .collection("users")
@@ -22,6 +23,18 @@ class BadgeRepositoryImpl @Inject constructor(
             .addSnapshotListener { snapshot, _ ->
 
                 if (snapshot == null) return@addSnapshotListener
+
+                if (isFirstSnapshot) {
+                    snapshot.documents.forEach { doc ->
+                        val badge = doc.toObject(Badge::class.java)
+                        if (badge != null) {
+                            cacheMap[doc.id] = badge
+                        }
+                    }
+                    isFirstSnapshot = false
+                    trySend(cacheMap.toMap())
+                    return@addSnapshotListener
+                }
 
                 for (change in snapshot.documentChanges) {
                     val badge = change.document.toObject(Badge::class.java)
