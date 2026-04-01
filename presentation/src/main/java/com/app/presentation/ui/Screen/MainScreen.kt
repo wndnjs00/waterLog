@@ -2,6 +2,7 @@ package com.app.presentation.ui.Screen
 
 import android.os.Build
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -55,9 +56,13 @@ import androidx.credentials.CredentialManager
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.app.domain.model.WaterLog
 import com.app.presentation.R
+import com.app.presentation.ui.Screen.Ai.AiScreen
 import com.app.presentation.ui.Screen.Main.Badge.BadgeDialog
 import com.app.presentation.ui.Screen.Main.MainNavigationContent
 import com.app.presentation.ui.Screens
@@ -80,17 +85,20 @@ fun MainScreen(
 ) {
     val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
+    val innerNavController = rememberNavController()
     var showBadgeDialog by remember { mutableStateOf(false) }
     var badgeKey by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
             when (event) {
-                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+                    .show()
+
                 is UiEvent.NavigateToLogin -> navController.navigate(Screens.Login.route) {
-                        popUpTo(Screens.Main.route) { inclusive = true }
-                    }
+                    popUpTo(Screens.Main.route) { inclusive = true }
+                }
+
                 is UiEvent.ShowBadgeDialog -> {
                     badgeKey = event.badgeKey
                     showBadgeDialog = true
@@ -102,7 +110,7 @@ fun MainScreen(
     if (showBadgeDialog) {
         BadgeDialog(
             badgeKey = badgeKey,
-            onDismiss = { showBadgeDialog = false}
+            onDismiss = { showBadgeDialog = false }
         )
     }
 
@@ -114,17 +122,34 @@ fun MainScreen(
 
     Scaffold(
         topBar = { TopAppBars(viewModel = viewModel, navController = navController) },
-//        bottomBar = {
-//            MainBottomNavigationBar(navController)
-//        }
+        bottomBar = {
+            MainBottomNavigationBar(innerNavController)
+        }
     ) { innerPadding ->
-        MainNavigationScreen(modifier = Modifier.padding(innerPadding))
+
+        NavHost(
+            navController = innerNavController,
+            startDestination = MainNavigationItem.Main.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(MainNavigationItem.Main.route) {
+                MainNavigationScreen()
+            }
+
+            composable(MainNavigationItem.Ai.route) {
+                AiScreen()
+            }
+        }
     }
 }
 
-sealed class MainNavigationItem(val route: String, val icon: ImageVector, val name: String) {
-    object Main : MainNavigationItem("Main Tab", Icons.Filled.Home, "물마시기")
-    object Ai : MainNavigationItem("Ai Tab", Icons.Filled.Star, "Ai도우미")
+sealed class MainNavigationItem(
+    val route: String,
+    @DrawableRes val iconRes: Int,
+    val name: String
+) {
+    object Main : MainNavigationItem("Main Tab", R.drawable.water_drop_img, "물마시기")
+    object Ai : MainNavigationItem("Ai Tab", R.drawable.ai_chat_img, "Ai도우미")
 }
 
 
@@ -132,7 +157,7 @@ sealed class MainNavigationItem(val route: String, val icon: ImageVector, val na
 fun MainBottomNavigationBar(navController: NavHostController) {
 
     // 탭 아이템 구성
-    val bottomNavigationItems = listOf(
+    val items = listOf(
         MainNavigationItem.Main,
         MainNavigationItem.Ai,
     )
@@ -141,21 +166,23 @@ fun MainBottomNavigationBar(navController: NavHostController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        bottomNavigationItems.forEach { item ->
+        items.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(imageVector = item.icon, contentDescription = item.route) },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = item.iconRes),
+                        contentDescription = item.route
+                    )
+                },
                 label = { Text(text = item.name) },
                 selected = currentRoute == item.route,
                 onClick = {
                     // 현재선택한 탭의 route로 이동해라
                     navController.navigate(item.route) {
-
-                        navController.graph.startDestinationRoute?.let { startRoute ->
-                            //백스택 정리
-                            popUpTo(startRoute) {
-                                // 이전화면 기억하고 복원
-                                saveState = true
-                            }
+                        //백스택 정리
+                        popUpTo(navController.graph.startDestinationId) {
+                            // 이전화면 기억하고 복원
+                            saveState = true
                         }
                         //중복된 화면 재활용
                         launchSingleTop = true
@@ -194,9 +221,11 @@ fun MainNavigationScreen(
     LaunchedEffect(Unit) {
         waterViewModel.event.collect { event ->
             when (event) {
-                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                is UiEvent.NavigateToLogin -> {  }
-                is UiEvent.ShowBadgeDialog -> { }
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+                    .show()
+
+                is UiEvent.NavigateToLogin -> {}
+                is UiEvent.ShowBadgeDialog -> {}
             }
         }
     }
@@ -275,11 +304,11 @@ fun TopAppBars(
             IconButton(onClick = {
                 coroutineScope.launch {
                     userInfo?.loginProvider?.let { viewModel.logout(it) }
-                        // 로그인 화면으로 이동
-                        navController.navigate(Screens.Login.route) {
-                            popUpTo(Screens.Login.route) { inclusive = true }
-                        }
+                    // 로그인 화면으로 이동
+                    navController.navigate(Screens.Login.route) {
+                        popUpTo(Screens.Login.route) { inclusive = true }
                     }
+                }
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.logout_img),
