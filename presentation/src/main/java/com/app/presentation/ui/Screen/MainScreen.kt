@@ -86,6 +86,8 @@ fun MainScreen(
     val accountUserInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val innerNavController = rememberNavController()
+    val innerNavBackStackEntry by innerNavController.currentBackStackEntryAsState()
+    val currentInnerRoute = innerNavBackStackEntry?.destination?.route
     var showBadgeDialog by remember { mutableStateOf(false) }
     var badgeKey by remember { mutableStateOf("") }
 
@@ -121,7 +123,13 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBars(viewModel = viewModel, navController = navController) },
+        topBar = {
+            TopAppBars(
+                viewModel = viewModel,
+                navController = navController,
+                currentInnerRoute = currentInnerRoute
+            )
+        },
         bottomBar = {
             MainBottomNavigationBar(innerNavController)
         }
@@ -248,6 +256,7 @@ fun MainNavigationScreen(
 fun TopAppBars(
     viewModel: MainViewModel,
     navController: NavHostController,
+    currentInnerRoute: String?,
     notificationViewModel: NotificationViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -259,8 +268,14 @@ fun TopAppBars(
     var isEmailPasswordStep by remember { mutableStateOf(false) }
     var emailDeletePassword by remember { mutableStateOf("") }
 
+    val title = when (currentInnerRoute) {
+        MainNavigationItem.Ai.route -> "Ai 수분섭취 도우미"
+        MainNavigationItem.Main.route, null -> "WaterLog"
+        else -> "WaterLog"
+    }
+
     TopAppBar(
-        title = { Text(stringResource(id = R.string.app_name)) },
+        title = { Text(title) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MainBlue,
             titleContentColor = Color.White,
