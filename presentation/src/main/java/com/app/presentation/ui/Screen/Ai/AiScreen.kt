@@ -254,7 +254,10 @@ fun RecommendChips(
                             .background(Color(0xFFE3F2FD))
                             .clickable { onClick(it) }
                             .padding(horizontal = 12.dp, vertical = 8.dp)) {
-                        Text(it)
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -418,7 +421,7 @@ fun AiScreenPreview() {
         false to "물섭취량은 개인상태에 따라 다를 수 있지만, 일반적으로 성인이 하루에 2리터를 마시는게 권장됩니다.물섭취량은 개인상태에 따라 다를 수 있지만, 일반적으로 성인이 하루에 2리터를 마시는게 권장됩니다물섭취량은 개인상태에 따라 다를 수 있지만, 일반적으로 성인이 하루에 2리터를 마시는게 권장됩니다물섭취량은 개인상태에 따라 다를 수 있지만, 일반적으로 성인이 하루에 2리터를 마시는게 권장됩니다",
         true to "감사합니다",
         false to "ㅎㅎ",
-        true to "ㅎㅎㅎ",
+        true to "ㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎ",
         false to "ㅎㅎㅎㅎㅎㅎ",
         true to "ㅎㅎㅎ",
         false to "ㅎㅎㅎㅎㅎㅎ",

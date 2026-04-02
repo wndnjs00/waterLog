@@ -4,22 +4,10 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -157,7 +145,7 @@ sealed class MainNavigationItem(
     val name: String
 ) {
     object Main : MainNavigationItem("Main Tab", R.drawable.water_drop_img, "물마시기")
-    object Ai : MainNavigationItem("Ai Tab", R.drawable.ai_chat_img, "Ai도우미")
+    object Ai : MainNavigationItem("Ai Tab", R.drawable.ai_chat_img, "Ai 도우미")
 }
 
 
@@ -170,7 +158,9 @@ fun MainBottomNavigationBar(navController: NavHostController) {
         MainNavigationItem.Ai,
     )
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = Color.White
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
@@ -201,6 +191,7 @@ fun MainBottomNavigationBar(navController: NavHostController) {
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MainBlue,
                     selectedTextColor = MainBlue,
+                    indicatorColor = Color.Transparent
                 )
             )
         }
