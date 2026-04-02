@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 
-private val Context.badgeDataStore by preferencesDataStore(name = "badge_prefs")
+private val Context.badgeDataStore by preferencesDataStore("badge_prefs")
 
 class BadgeDataStore @Inject constructor(
     @ApplicationContext private val context: Context,

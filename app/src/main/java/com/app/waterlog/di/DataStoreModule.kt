@@ -2,6 +2,7 @@ package com.app.waterlog.di
 
 import android.content.Context
 import com.app.data.datastore.BadgeDataStore
+import com.app.data.datastore.ChatLimitDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,5 +19,13 @@ object DataStoreModule {
         @ApplicationContext context: Context
     ): BadgeDataStore {
         return BadgeDataStore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatLimitDataStore(
+        @ApplicationContext context: Context,
+    ): ChatLimitDataStore {
+        return ChatLimitDataStore(context)
     }
 }

@@ -24,6 +24,8 @@ val naverClientId = localProperties.getProperty("naver_client_id")
     ?: throw GradleException("naver_client_id not found in local.properties")
 val naverClientSecret = localProperties.getProperty("naver_client_secret")
     ?: throw GradleException("naver_client_secret not found in local.properties")
+val openAiKey = localProperties.getProperty("openai_api_key")
+    ?: throw GradleException("openai_api_key not found in local.properties")
 
 android {
     namespace = "com.app.waterlog"
@@ -43,6 +45,7 @@ android {
         buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"$kakaoKey\"")
         buildConfigField("String", "NAVER_CLIENT_ID", "\"$naverClientId\"")
         buildConfigField("String", "NAVER_CLIENT_SECRET", "\"$naverClientSecret\"")
+        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiKey\"")
     }
 
     compileOptions {
@@ -102,6 +105,9 @@ dependencies {
     // firestore firestore
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Retrofit (GsonConverterFactory)
+    implementation(libs.retrofit.converter.gson)
 
     //ThreeTenABP 라이브러리 (시간변환 라이브러리)
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
