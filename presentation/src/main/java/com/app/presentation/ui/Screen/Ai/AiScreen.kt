@@ -106,10 +106,12 @@ fun AiScreenContent(
         "하루 권장량", "물 마시는 시간", "수분 부족 증상", "운동 후 수분", "수분 섭취 팁"
     )
 
-    // 메시지 추가될때 자동 스크롤
-    LaunchedEffect(messages.size) {
+    // 메시지 추가될때 자동 스크롤 (맨 위 고정: BotIntro + RecommendChips = 2칸)
+    LaunchedEffect(messages.size, isLoading) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size)
+            val targetIndex =
+                if (isLoading) 2 + messages.size else 1 + messages.size
+            listState.animateScrollToItem(targetIndex)
         }
     }
 
@@ -127,15 +129,15 @@ fun AiScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            if (messages.isEmpty()) {
-                item {
-                    BotIntro()
-                }
+            item {
+                BotIntro()
+            }
 
-                item {
-                    RecommendChips(
-                        list = recommendList, onClick = { onSend(it) })
-                }
+            item {
+                RecommendChips(
+                    list = recommendList,
+                    onClick = { onSend(it) },
+                )
             }
 
             items(messages) { (isUser, text) ->
@@ -443,7 +445,8 @@ fun AiScreenPreview() {
 fun AiScreenLimitPreview() {
 
     val fakeMessages = listOf(
-        false to "오늘 질문은 여기까지예요!"
+        false to "ㅎㅎㅎ!",
+        true to "ㅎㅎㅎ!"
     )
 
     AiScreenContent(
