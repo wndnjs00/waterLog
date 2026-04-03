@@ -1,5 +1,6 @@
 package com.app.presentation.ui.Screen.Main.Badge
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ fun BadgeScreen(
 ) {
     val badges by viewModel.badges.collectAsState()
     var dialogBadgeKey by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     val badgeList = listOf(
         "day_2L",
@@ -66,8 +68,10 @@ fun BadgeScreen(
     // 이벤트 수신
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
-            if (event is UiEvent.ShowBadgeDialog) {
-                dialogBadgeKey = event.badgeKey
+            when (event) {
+                is UiEvent.ShowBadgeDialog -> dialogBadgeKey = event.badgeKey
+                is UiEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is UiEvent.NavigateToLogin -> {}
             }
         }
     }
